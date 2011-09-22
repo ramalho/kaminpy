@@ -1,0 +1,447 @@
+-> -> <closure>
+
+-> > > <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> > > <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> > > > <closure>
+
+-> > > > > <closure>
+
+-> ()
+
+-> <closure>
+
+-> <closure>
+
+-> > <closure>
+
+-> <closure>
+
+-> -> <closure>
+
+-> > <closure>
+
+-> > > > <closure>
+
+-> > <closure>
+
+-> 6
+
+-> 6
+
+-> > <closure>
+
+-> 9
+
+-> 9
+
+-> -> <closure>
+
+-> <closure>
+
+-> 6
+
+-> 6
+
+-> -> (... ...)
+
+-> (... ...)
+
+-> 3
+
+-> 3
+
+-> 4
+
+-> 4
+
+-> (3 4 ...)
+
+-> (3 4 ...)
+
+-> ()
+
+-> ()
+
+-> (3 4)
+
+-> (3 4)
+
+-> > <closure>
+
+-> (... ...)
+
+-> (... ...)
+
+-> 0
+
+-> 0
+
+-> 1
+
+-> 1
+
+-> (0 1 ...)
+
+-> (0 1 ...)
+
+-> > > > <closure>
+
+-> (... ...)
+
+-> (... ...)
+
+-> T
+
+-> T
+
+-> (3 4)
+
+-> (3 4)
+
+-> > > > <closure>
+
+-> (... ...)
+
+-> (... ...)
+
+-> T
+
+-> T
+
+-> (0 1 2 3 4)
+
+-> (0 1 2 3 4)
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> > <closure>
+
+-> > <closure>
+
+-> > > <closure>
+
+-> 10
+
+-> 10
+
+-> <closure>
+
+-> > <closure>
+
+-> 5
+
+-> 5
+
+-> > > > > <closure>
+
+-> > > <closure>
+
+-> <closure>
+
+-> (... ...)
+
+-> <closure>
+
+-> (... ...)
+
+-> T
+
+-> (2 3 5 7 11)
+
+-> -> <closure>
+
+-> > > <closure>
+
+-> > <closure>
+
+-> <closure>
+
+-> 6
+
+-> 6
+
+-> -> <closure>
+
+-> > > > <closure>
+
+-> <closure>
+
+-> > <closure>
+
+-> > <closure>
+
+-> > > > <closure>
+
+-> > <closure>
+
+-> > > > <closure>
+
+-> (... ...)
+
+-> T
+
+-> (Permutations of a b c)
+
+-> ((a b c) (a c b) (b a c) (b c a) (c a b) (c b a))
+
+-> <closure>
+
+-> (2 ...)
+
+-> T
+
+-> (2 1 3 4)
+
+-> (2 1 3 4)
+
+-> -> (... ...)
+
+-> (... ...)
+
+-> > > <closure>
+
+-> (... ...)
+
+-> (... ...)
+
+-> (... ...)
+
+-> 6
+
+-> 6
+
+-> -> > > > > > > > > <closure>
+
+-> > <closure>
+
+-> > > <closure>
+
+-> > > > <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> > > > > <closure>
+
+-> > > > <closure>
+
+-> Unsatisfiable
+
+-> -> > <closure>
+
+-> > > > <closure>
+
+-> ((2 2) (0 1) (3 0))
+
+-> ((2 2) (0 1) (3 0))
+
+-> (... ...)
+
+-> <closure>
+
+-> <closure>
+
+-> > > > <closure>
+
+-> > > > <closure>
+
+-> > > > <closure>
+
+-> -> > <closure>
+
+-> -> > <closure>
+
+-> > > > > > <closure>
+
+-> > > > <closure>
+
+-> T
+
+-> T
+
+-> ()
+
+-> ()
+
+-> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> a
+
+-> a
+
+-> <closure>
+
+-> <closure>
+
+-> 24
+
+-> 24
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> 3
+
+-> 3
+
+-> <closure>
+
+-> > <closure>
+
+-> 15
+
+-> 15
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> 2
+
+-> 2
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> 3
+
+-> 3
+
+-> <closure>
+
+-> <closure>
+
+-> 6
+
+-> 6
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> 4
+
+-> 4
+
+-> <closure>
+
+-> <closure>
+
+-> > <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> > <closure>
+
+-> yes
+
+-> yes
+
+-> no
+
+-> no
+
+-> > <closure>
+
+-> 24
+
+-> 24
+
+-> > <closure>
+
+-> <closure>
+
+-> 24
+
+-> 24
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> 1
+
+-> 1
+
+-> > > <closure>
+
+-> 24
+
+-> 24
+
+-> 

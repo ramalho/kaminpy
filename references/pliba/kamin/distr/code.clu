@@ -1,0 +1,305 @@
+; From Chapter 1
+(define sqr (x) (* x x))
+(define abs (x) (if (< x 0) (- 0 x) x))
+(define +1 (x) (+ x 1))
+(define and (x y) (if x y x))
+(define or (x y) (if x x y))
+(define not (x) (if x 0 1))
+(define <> (x y) (not (= x y)))
+(define >= (x y) (or (> x y) (= x y)))
+(define <= (x y) (or (< x y) (= x y)))
+(define mod (m n) (- m (* n (/ m n))))
+(define min (x y) (if (< x y) x y))
+(define max (x y) (if (> x y) x y))
+; Section 6.1
+(cluster Point
+    ; Export: new, abscissa, ordinate, reflect, rotate, compare, quadrant
+    (rep x-coord y-coord)
+    (define new (x y) (Point x y))
+    (define abscissa (p) (x-coord p))
+    (define ordinate (p) (y-coord p))
+    (define reflect (p)
+         (begin
+               (set-x-coord p (- 0 (x-coord p)))
+               (set-y-coord p (- 0 (y-coord p)))))
+    (define rotate (p)
+         (begin
+               (set temp (x-coord p))
+               (set-x-coord p (y-coord p))
+               (set-y-coord p (- 0 temp))))
+    (define compare (p1 p2)
+         (< (sqrdist p1) (sqrdist p2)))
+    (define quadrant (p)
+         (if (>= (x-coord p) 0)
+              (if (>= (y-coord p) 0) 1 2)
+              (if (< (y-coord p) 0) 3 4)))
+    ; sqrdist is not exported
+    (define sqrdist (p)
+         (+ (sqr (x-coord p)) (sqr (y-coord p))))
+)
+(set p1 (Point$new 3 4))
+(Point$rotate p1)
+(Point$abscissa p1)
+4
+(Point$ordinate p1)
+-3
+(Point$reflect p1)
+(Point$abscissa p1)
+-4
+(Point$ordinate p1)
+3
+(set p2 (Point$new 1 5))
+(Point$compare p1 p2)
+1
+(define enclosed-area (p1 p2)
+      (abs (* (- (Point$abscissa p1) (Point$abscissa p2))
+        (- (Point$ordinate p1) (Point$ordinate p2)))))
+(enclosed-area p1 p2)
+10
+(cluster Point
+    ; Export: new, abscissa, ordinate, reflect, rotate, compare, quadrant
+    (rep x-mag y-mag quad)
+    (define new (x y) (Point (abs x) (abs y) (compute-quad x y)))
+    (define abscissa (p)
+         (if (> (quad p) 2) (- 0 (x-mag p)) (x-mag p)))
+    (define ordinate (p)
+         (if (or (= (quad p) 2) (= (quad p) 3))
+              (- 0 (y-mag p))
+              (y-mag p)))
+    (define reflect (p)
+         (set-quad p (+1 (mod (+1 (quad p)) 4))))
+    (define rotate (p)
+         (begin
+               (set temp (x-mag p))
+               (set-x-mag p (y-mag p))
+               (set-y-mag p temp)
+               (set-quad p (+1 (mod (quad p) 4)))))
+    (define compare (p1 p2)
+         (< (sqrdist p1) (sqrdist p2)))
+    (define quadrant (p) (quad p))
+    ; compute-quad, sqrdist are not exported
+    (define compute-quad (x y)
+         (if (>= x 0)
+              (if (>= y 0) 1 2)
+              (if (< y 0) 3 4)))
+    (define sqrdist (p)
+         (+ (sqr (x-mag p)) (sqr (y-mag p))))
+)
+(set p1 (Point$new 3 4))
+(Point$rotate p1)
+(Point$abscissa p1)
+4
+(Point$ordinate p1)
+-3
+(Point$reflect p1)
+(Point$abscissa p1)
+-4
+(Point$ordinate p1)
+3
+(set p2 (Point$new 1 5))
+(Point$compare p1 p2)
+1
+(define enclosed-area (p1 p2)
+      (abs (* (- (Point$abscissa p1) (Point$abscissa p2))
+        (- (Point$ordinate p1) (Point$ordinate p2)))))
+(enclosed-area p1 p2)
+10
+; Section 6.2.3
+(cluster List
+    ; Exports: nil, null?, cons, car, cdr, rplaca, rplacd
+    (rep type a d)
+    (define nil () (List 0 0 0))
+    (define null? (l) (= (type l) 0))
+    (define cons (item l) (List 1 item l))
+    (define car (l) (a l))
+    (define cdr (l) (d l))
+    (define rplaca (l a) (set-a l a))
+    (define rplacd (l d) (set-d l d))
+)
+(set x (List$cons 1 (List$cons 2 (List$nil)))) ; x is 1,2
+(set y x) ; y is 1,2
+(List$car x)
+1
+(List$car y)
+1
+(List$car (List$cdr x))
+2
+(List$rplaca y 3) ; y is 3,2, and so is x
+(List$car x)
+3
+(List$car y)
+3
+(define length (l)
+    (if (List$null? l) 0 (+1 (length (List$cdr l)))))
+(length x)
+2
+(length y)
+2
+;
+(define nth (n l)
+      (if (= n 0) (List$car l) (nth (- n 1) (List$cdr l))))
+(define changenth (n x l)
+      (if (= n 0) (List$rplaca l x) (changenth (- n 1) x (List$cdr l)))))
+;
+(cluster Array
+      ; Exports: new, index, assign
+      ; Indexing is from base, array has length size,
+      ; and elements are in list elts.
+      (rep base size elts)
+      (define new (b s) (Array b s (zerolist s)))
+      (define index (A i)
+            (if (out-of-bounds A i) 0 (nth (- i (base A)) (elts A))))
+      (define assign (A i x)
+            (if (out-of-bounds A i) A (changenth (- i (base A)) x (elts A))))
+      ; zerolist, out-of-bounds not exported
+      (define zerolist (n)
+            (if (= n 0) (List$nil) (List$cons 0 (zerolist (- n 1)))))
+      (define out-of-bounds (A i)
+            (or (< i (base A)) (> i (- (+ (base A) (size A)) 1))))
+)
+(set A (Array$new 1 10))
+(set i 0)
+(while (< i 10) (begin (set i (+ i 1)) (Array$assign A i (* i i))))
+(set i 0)
+(while (< i 10) (begin (set i (+ i 1)) (print (Array$index A i))))
+;
+(cluster Pair
+    ; Exports: fst, snd, mkPair
+    (rep f s)
+    (define fst (p) (f p))
+    (define snd (p) (s p))
+    (define mkPair (x y) (Pair x y))
+)
+;
+(define assoc (i l)
+       (if (List$null? l) l
+            (if (= (Pair$fst (List$car l)) i)
+                 l
+                 (assoc i (List$cdr l)))))
+;
+(cluster SpArray
+    ; Exports: new, index, assign
+    (rep base size elts)
+    (define new (b s) (SpArray b s (List$nil)))
+    (define index (A i)
+           (begin
+               (set found (assoc i (elts A)))
+               (if (List$null? found) 0 (Pair$snd (List$car found)))))
+    (define assign (A i x)
+         (if (out-of-bounds A i) A
+             (begin
+                 (set found (assoc i (elts A)))
+                 (if (List$null? found)
+                     (set-elts A (List$cons (Pair$mkPair i x) (elts A)))
+                     (List$rplaca found (Pair$mkPair i x)))
+                 A)))
+    ; out-of-bounds not exported
+    (define out-of-bounds (A i)
+          (or (< i (base A)) (> i (- (+ (base A) (size A)) 1))))
+)
+(set A (SpArray$new 1 10))
+(set i 0)
+(while (< i 10) (begin (set i (+ i 1)) (SpArray$assign A i (* i i))))
+(set i 0)
+(while (< i 10) (begin (set i (+ i 1)) (print (SpArray$index A i))))
+; Section 6.4
+(cluster Poly
+    ; Export: create, degree, coeff, zero?, add, minus, sub, mul, prnt
+    (rep coeffs lo hi)
+    (define create (c n)
+        (begin
+             (set A (Array$new 0 20))
+             (Array$assign A n c)
+             (Poly A n n)))
+    (define degree (p) (hi p))
+    (define coeff (p n)
+        (if (or (< n (lo p)) (> n (hi p))) 0 (Array$index (coeffs p) n)))
+    (define zero? (p) (= 0 (coeff p (lo p))))
+    (define add (p q)
+        (begin
+             (set result (create 0 0))
+             (set-lo result (min (lo p) (lo q)))
+             (set-hi result (max (hi p) (hi q)))
+             (set i (lo result))
+             (while (<= i (hi result))
+                 (begin
+                      (set-coeff result i (+ (coeff p i) (coeff q i)))
+                      (set i (+1 i))))
+             (remove-zeros result)
+             result))
+    (define minus (p)
+        (begin
+             (set result (create 0 0))
+             (set-lo result (lo p))
+             (set-hi result (hi p))
+             (set i (lo p))
+             (while (<= i (hi p))
+                 (begin
+                      (set-coeff result i (- 0 (coeff p i)))
+                      (set i (+1 i))))
+               result))
+    (define sub (p q)
+        (add p (minus q)))
+    (define mul (p q)
+        (begin
+             (set result (create 0 0))
+             (if (> (+ (hi p) (hi q)) 19) result ; error!
+                 (if (or (zero? p) (zero? q)) result
+                    (begin
+                         (set-lo result (+ (lo p) (lo q)))
+                         (set-hi result (+ (hi p) (hi q)))
+                         (set p-hi (hi p))
+                         (set q-hi (hi q))
+                         (set q-lo (lo q))
+                         (set i (lo p))
+                         (while (<= i p-hi)
+                              (begin
+                                   (set j q-lo)
+                                   (while (<= j q-hi)
+                                             (begin
+                                    (set-coeff result (+ i j)
+                                          (+ (coeff result (+ i j))
+                                         (* (coeff p i) (coeff q j))))
+                                      (set j (+1 j))))
+                                 (set i (+1 i))))
+                         result)))))
+    (define prnt (p)
+     (if (zero? p) (begin (print 0) (print 0))
+       (begin
+         (set expon (hi p))
+         (while (>= expon (lo p))
+           (if (= (coeff p expon) 0)
+             (set expon (- expon 1))
+             (begin (print (coeff p expon)) (print expon)
+                    (set expon (- expon 1))))))))
+  ; set-coeff, remove-zeros not exported
+    (define set-coeff (p n c)
+          (Array$assign (coeffs p) n c))
+    (define remove-zeros (p) ; (lo p) is too low, and/or (hi p) too high
+        (begin
+             (while (and (= 0 (coeff p (lo p))) (<= (lo p) (hi p)))
+                  (set-lo p (+1 (lo p))))
+             (if (> (lo p) (hi p)) ; p a zero polynomial
+                  (begin (set-lo p 0) (set-hi p 0))
+                  (while (= 0 (coeff p (hi p)))
+                          (set-hi p (- (hi p) 1))))))
+)
+(define diff (p)
+    (begin
+        (set n 1)
+        (set pdx (Poly$create 0 0))
+        (while (<= n (Poly$degree p))
+            (begin
+                (set pdx (Poly$add pdx
+                       (Poly$create (* n (Poly$coeff p n)) (- n 1))))
+                (set n (+1 n))))
+        pdx))
+(set p (Poly$create 5 2))
+(set q (Poly$create 3 1))
+(set r (Poly$add p q))
+(Poly$prnt (diff r))
+10
+1
+3
+0
+quit

@@ -1,0 +1,105 @@
+echo 'This file compiles all interpreters, saving binaries, and'
+echo 'tests them by running them on files code.xxx (xxx the language name)'
+echo 'and comparing the output to the files code.xxx.o.'
+echo ''
+echo 'The expected output from running this file is the list of messages:'
+echo ''
+echo 'Compiling CHAP1; binary is chap1'
+echo 'Running CHAP1'
+echo 'Compiling LISP; binary is lisp'
+echo 'Running LISP'
+echo ''
+echo 'and so on.  If the output from any interpreter differs from'
+echo 'what it should be, you will see the diff output following'
+echo 'the "Running XXX" message'
+echo ''
+echo 'See the README file for more information'
+echo ''
+echo 'Compiling CHAP1; binary is chap1'
+pc  chap1.p
+mv a.out chap1
+echo 'Running CHAP1'
+./chap1 < code.ch1  > chap1.out
+diff code.ch1.o chap1.out
+rm chap1.out
+echo 'Compiling LISP; binary is lisp'
+pc  lisp.p
+mv a.out lisp
+echo 'Running LISP'
+./lisp < code.lsp  > lisp.out
+diff code.lsp.o lisp.out
+rm lisp.out
+echo 'Compiling APL; binary is apl'
+pc  apl.p
+mv a.out apl
+echo 'Running APL'
+./apl < code.apl  > apl.out
+diff code.apl.o apl.out
+rm apl.out
+echo 'Compiling SCHEME; binary is scheme'
+pc  scheme.p
+mv a.out scheme
+echo 'Running SCHEME'
+./scheme < code.sch  > scheme.out
+diff code.sch.o scheme.out
+rm scheme.out
+echo 'Compiling SASL; binary is sasl'
+pc  sasl.p
+mv a.out sasl
+echo 'Running SASL'
+./sasl < code.ssl  > sasl.out
+diff code.ssl.o sasl.out
+rm sasl.out
+echo 'Compiling CLU; binary is clu'
+pc  clu.p
+mv a.out clu
+echo 'Running CLU'
+./clu < code.clu  > clu.out
+diff code.clu.o clu.out
+rm clu.out
+echo 'Compiling SMALLTALK; binary is smalltalk'
+pc  smalltalk.p
+mv a.out smalltalk
+echo 'Running SMALLTALK'
+./smalltalk < code.smt  > smalltalk.out
+diff code.smt.o smalltalk.out
+rm smalltalk.out
+echo 'Compiling PROLOG; binary is prolog'
+pc  prolog.p
+mv a.out prolog
+echo 'Running PROLOG - file 1'
+./prolog < code1.pro  > prolog1.out
+diff code1.pro.o prolog1.out
+rm prolog1.out
+# echo 'Running PROLOG - file 2'
+# ./prolog < code2.pro  > prolog2.out
+# diff code2.pro.o prolog2.out
+# rm prolog2.out
+echo 'Compiling stacking version of LISP; binary is lisp-stack'
+pc  lisp-stack.p
+mv a.out lisp-stack
+echo 'Running stacking version of LISP'
+./lisp-stack < code.gc.lsp  > lisp-stack.out
+diff code.stack.o lisp-stack.out
+rm lisp-stack.out
+echo 'Compiling mark-scan version of LISP; binary is lisp-msgc'
+pc  lisp-msgc.p
+mv a.out lisp-msgc
+echo 'Running mark-scan version of LISP'
+./lisp-msgc < code.gc.lsp  > lisp-msgc.out
+diff code.msgc.o lisp-msgc.out
+rm lisp-msgc.out
+echo 'Compiling semi-space version of LISP; binary is lisp-ssgc'
+pc  lisp-ssgc.p
+mv a.out lisp-ssgc
+echo 'Running semi-space version of LISP'
+./lisp-ssgc < code.gc.lsp  > lisp-ssgc.out
+diff code.ssgc.o lisp-ssgc.out
+rm lisp-ssgc.out
+echo 'Compiling reference-counting version of LISP; binary is lisp-refcnt'
+pc  lisp-refcnt.p
+mv a.out lisp-refcnt
+echo 'Running reference-counting version of LISP'
+./lisp-refcnt < code.gc.lsp  > lisp-refcnt.out
+diff code.refcnt.o lisp-refcnt.out
+rm lisp-refcnt.out

@@ -1,0 +1,293 @@
+-> -> mod
+-> +1
+-> -> (a)
+
+-> (a)
+
+-> (a b)
+
+-> (a b)
+
+-> ((a) b)
+
+-> ((a) b)
+
+-> ((b (c d)))
+
+-> ((b (c d)))
+
+-> T
+
+-> T
+
+-> ()
+
+-> ()
+
+-> length
+-> caar
+-> cadr
+-> cddr
+-> caddr
+-> cadar
+-> cadddr
+-> list1
+-> list2
+-> list3
+-> ((a) b)
+
+-> ((a) b)
+
+-> or
+-> atom?
+-> > > > > > equal
+-> ()
+
+-> ()
+
+-> T
+
+-> T
+
+-> ()
+
+-> ()
+
+-> and
+-> not
+-> divides
+-> > interval-list
+-> (3 4 5 6 7)
+
+-> (3 4 5 6 7)
+
+-> > > > > remove-multiples
+-> (3 5 7)
+
+-> (3 5 7)
+
+-> > > sieve
+-> primes<=
+-> (2 3 5 7)
+
+-> (2 3 5 7)
+
+-> > > > insert
+-> > > insertion-sort
+-> (2 3 4 5 6 8)
+
+-> (2 3 4 5 6 8)
+
+-> > > > assoc
+-> Thant
+
+-> Thant
+
+-> > > > > mkassoc
+-> ((I Ching))
+
+-> ((I Ching))
+
+-> ((I Ching) (E coli))
+
+-> ((I Ching) (E Coli))
+
+-> ((I Magnin) (E coli))
+
+-> ((I Magnin) (E coli))
+
+-> Magnin
+
+-> Magnin
+
+-> ((apple ((texture crunchy))) (banana ((color yellow))))
+
+-> > > getprop
+-> crunchy
+
+-> crunchy
+
+-> > > putprop
+-> ((apple ((texture crunchy) (color red))) (banana ((color yellow))))
+
+-> ((apple ((texture crunchy) (color red))) (banana ((color yellow))))
+
+-> red
+
+-> red
+
+-> hasprop?
+-> > > > > > gatherprop
+-> ((apple ((texture crunchy) (color red))) (banana ((color yellow))) (lemon ((color yellow))))
+
+-> ((apple ((texture crunchy) ... (lemon ((color yellow))))))
+
+-> Garbage collection ...collected 435(87%) records
+Called gc during parsing. Parse aborted; reenter input
+-> (banana lemon)
+
+-> ()
+
+-> ()
+
+-> > addelt
+-> > > member?
+-> size
+-> > > > > union
+-> (3 a)
+
+-> (3 a)
+
+-> T
+
+-> T
+
+-> (a 2 3)
+
+-> (a 2 3)
+
+-> ((a b) 1)
+
+-> ((a b) 1)
+
+-> T
+
+-> T
+
+-> > > > sum
+-> > > > > > wrong-sum
+-> 10
+
+-> 10
+
+-> 16
+
+-> 16
+
+-> right-sum
+-> > > > > > right-sum-aux
+-> 10
+
+-> 10
+
+-> > > > > > pre-ord
+-> A
+B
+C
+D
+E
+F
+G
+H
+I
+I
+
+-> (output is A B C D E F G H I)
+
+-> -> ()
+
+-> front
+-> rm-front
+-> > enqueue
+-> empty?
+-> -> level-ord
+-> > > > > > > > > > > > > level-ord*
+-> A
+B
+E
+C
+D
+F
+I
+G
+H
+()
+
+-> (output is A B E C D E F I G H)
+
+-> -> > > > > inter
+-> > > > > > diff
+-> > > > UNION
+-> > > > INTER
+-> > > > DIFF
+-> > SELECT
+-> > > col-num
+-> > > > > include-rows
+-> > nth
+-> > PROJECT
+-> > > col-num*
+-> > > > include-cols*
+-> > > > include-cols
+-> > append
+-> > > > > > > > > > > > JOIN
+-> > > > > > > > > > > > > > > > > join-cols*
+-> > > > join-cols
+-> > > > > > > ((Victim Crime Criminal Location) (Phelps robbery Harrison London) (Drebber murder Hope London) (Sir-Charles murder Stapleton Devonshire) (Lady-Eva blackmail Milverton London) (Brunton murder Howells West-Sussex))
+
+-> > > > > ((Victim Weapon Motive) (Drebber poison revenge) (Sir-Charles hound greed) (Brunton burial-alive passion))
+
+-> > > > ((Victim Weapon Motive Criminal) (Drebber poison revenge Hope))
+
+-> ((Victim Weapon Motive Criminal) (Drebber poison revenge Hope))
+
+-> -> > > > > > eval
+-> > > > > apply-op
+-> Garbage collection ...collected 283(57%) records
+Called gc during parsing. Parse aborted; reenter input
+-> 23
+
+-> 7
+
+-> 7
+
+-> 24
+
+-> 24
+
+-> > > > > > > eval
+-> 6
+
+-> 6
+
+-> > > > > > > > > > eval
+-> > > > > > > > > apply-binary-op
+-> > > > > > > apply-unary-op
+-> a
+
+-> a
+
+-> (3 9)
+
+-> (3 9)
+
+-> > > > > > > > > > > > > > > > > > eval
+-> userfun?
+-> > > > apply-userfun
+-> > > > evallist
+-> > > > mkassoc*
+-> ((double ((a) (+ a a))))
+
+-> ((double ((a) (+ a a))))
+
+-> 8
+
+-> 8
+
+-> > > ((exp ((m n) (if (= n 0) 1 (* m (exp m (- n 1)))))))
+
+-> Garbage collection ...collected 217(43%) records
+Called gc during parsing. Parse aborted; reenter input
+-> 64
+
+-> 64
+
+-> r-e-p-loop
+-> > > > > > > r-e-p-loop*
+-> > > > process-def
+-> > > process-exp
+-> > > > > > Garbage collection ...collected 100(20%) records
+(double 8 exp 64)
+
+-> (double 8 exp 64)
+
+-> 

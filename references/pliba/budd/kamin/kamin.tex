@@ -1,0 +1,46 @@
+\documentstyle[cprog]{report}
+\includeonly{future}
+\begin{document}
+\setlength{\textwidth}{7.4in}
+\setlength{\oddsidemargin}{1in}
+\setlength{\evensidemargin}{1in}
+\setlength{\topmargin}{0in}
+\title{The Kamin Interpreters in C++}
+\author{Tim Budd}
+\maketitle
+\begin{abstract}
+This paper describes a series of interpreters for the languages used in the 
+book ``Programming Languages: An Interpreter-Based Approach'' by Samuel 
+Kamin (Addison-Wesley, 1989).  Unlike the interpreters provided by Kamin,
+which are written in Pascal, 
+these interpreters are written in C++.
+It is my belief that the use of inheritance in C++ better
+illustrates the unique features of each of the several languages.
+In the Pascal versions of the interpreters the differences between the
+various interpreters, although small, are scattered throughout the code.
+In the C++ versions differences are produced using only the mechanism of
+subclassing.  This means that the vast majority of code remains the same, 
+and differences can be much more precisely isolated.
+
+The chapters in this report correspond to the chapters in the original text.
+Where motivational or background material is provided in that source it is
+generally omitted here.  A major exception is in those places (chiefly
+chapters 3, 7 and 8) where I have selected a syntax slightly different 
+from that provided by Kamin.
+
+The use of an Object-Oriented language for the interpreters may seem a bit
+incongruous, since Object-Oriented programming is not discussed until
+Chapter 7.  Nevertheless, I think the benefits of programming the
+interpreters in C++ outweighs this problem.
+\end{abstract}
+
+\include{chap1}
+\include{chap2}
+\include{chap3}
+\include{chap4}
+\include{chap5}
+\include{chap6}
+\include{chap7}
+\include{chap8}
+\include{future}
+\end{document}

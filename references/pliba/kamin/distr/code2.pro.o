@@ -1,0 +1,41 @@
+-> -> -> -> 
+-> 
+-> -> 
+-> 
+-> 
+-> -> 
+-> 
+-> 
+-> 
+-> 
+-> 
+-> 
+-> 
+-> -> 
+-> > 
+-> -> 
+-> -> 
+-> > 
+-> -> > > > > 
+-> > > > > > > > 
+-> -> > 
+-> > 
+-> -> 
+-> > 
+-> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> -> > 
+-> -> 
+-> > > > > > 
+-> -> > 
+-> > 
+-> > 
+-> 
+-> 
+-> > 
+(cons (move c a table) (cons (move a b table) (cons (move b table c) (cons (move a table b) nil))))
+Satisfied
+
+-> > 
+(cons (move c a table) (cons (move a b table) (cons (move b table c) (cons (move a table b) nil))))
+Satisfied
+
+-> 

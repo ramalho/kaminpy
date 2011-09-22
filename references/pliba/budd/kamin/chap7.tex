@@ -1,0 +1,533 @@
+\chapter{The Smalltalk interpreter}
+
+As with chapter 3, with the Smalltalk interpreter I have also made a number
+of changes.  These include the following:
+
+\begin{itemize}
+\item
+I have changed the syntax for message passing.
+The first argument in a message
+passing expression is an object, which is defined (for implementation
+purposes) as a type of function.  The second argument must be the message
+selector, a symbol.  This change is not only produces a syntax that is
+slightly more Smalltalk-like, but it more closely reinforces the critical
+object-oriented idea that the interpretation of a message depends upon the
+receiver for that message.
+\item
+Integers are objects, and respond to messages.  The most obvious effect of
+this is to restore infix syntax for arithmetic operations, since (3 + 4) is
+interpreted (Smalltalk-like) as the message ``+'' being passed to the
+object 3 with argument 4.
+\item
+The initial environment is very spare.  There are only the two classes
+{\sf Object} and {\sf Integer}, which respond to the messages 
+{\sf subclass}, {\sf method} and {\sf new}, and integer instances that respond
+to arithmetic messages.
+\item
+The {\sf if} command is a message sent to integers (0 for false and
+non-zero for true).  This is also more Smalltalk-like.  The following
+expression sets {\sf z} to the minimum of {\sf x} and {\sf y}.
+\begin{center}
+{\sf ((x $<$ y) if (set z x) (set z y))}
+\end{center}
+\item
+The only non-message statements are the assignment statement {\sf set} and
+the {\sf begin} statement.  (Note - there is no loop.  I couldn't think of
+a good way to do this within the syntax given using message passing (no
+blocks!) but I don't think this will be too great a problem; recursion can
+be used in most cases where looping is used currently).
+\end{itemize}
+
+A class hierarchy for the classes added in this chapter is shown in
+Figure~\ref{smallhier}.
+
+\setlength{\unitlength}{5mm}
+\begin{figure}
+\begin{picture}(25,10)(-4,-5)
+\put(-3.5,0){\sf Expression}
+\put(0,0.2){\line(1,0){1}}
+\put(1,0){\sf Function}
+\put(0,0.2){\line(1,4){1}}
+\put(1,4){\sf Symbol}
+\put(3,4.2){\line(1,0){1}}
+\put(4,4){\sf SmalltalkSymbol}
+\put(4,0.2){\line(1,-2){1}}
+\put(5,-2){\sf UserFunction}
+\put(9,-1.8){\line(1,0){1}}
+\put(10,-2){\sf method}
+\put(13,-1.8){\line(1,0){1}}
+\put(14,-2){\sf SubclassMethod}
+\put(13,-1.8){\line(1,1){1}}
+\put(14,-1){\sf NewMethod}
+\put(13,-1.8){\line(1,2){1}}
+\put(14,0){\sf IntegerBinaryMethod}
+\put(13,-1.8){\line(1,-1){1}}
+\put(14,-3){\sf IfMethod}
+\put(13,-1.8){\line(1,-2){1}}
+\put(14,-4){\sf MethodMethod}
+\put(4,0.2){\line(1,2){1}}
+\put(5,2){\sf Object}
+\put(7,2.2){\line(1,0){1}}
+\put(8,2){\sf IntegerObject}
+\end{picture}
+\caption{Expression class hierarchy for Smalltalk interpreter}\label{smallhier}
+\end{figure}
+
+\section{Objects and Methods}
+
+An object is an encapsulation of behavior and state.  That is, an object
+maintains, like a cluster, certain state information accessible only
+within the object.  Similarly objects maintain a collection of functions,
+called {\em methods}, that can be invoked only via message passing.
+Internally, both these are represented by environments (Figure~\ref{obj}).
+The methods environment contains a collection of functions, and the data
+environment contains a collection of internal variables.  Objects are
+declared as a subclass of {\sf function} so that normal function syntax can be
+used for message passing.  That is, a message is written as
+
+\begin{center}
+{\sf (object message arguments)}
+\end{center}
+
+\begin{figure}
+\begin{cprog}
+class Object : public Function {
+private:
+	Env methods;
+	Env data;
+	friend class SubclassMethod;
+public:
+	Object(Environment * m, Environment * d);
+
+	virtual void print();
+	virtual void free();
+	virtual void apply(Expr &, ListNode *, Environment *);
+
+	// methods used by classes to create new instances
+	// note these are invoked only on classes, not simple instances
+	ListNode * getNames();
+	Environment * getMethods();
+};
+
+class Method : public UserFunction {
+public:
+	Method(ListNode *anames, Expression * bod) ;
+
+	virtual void doMethod(Expr&, Object*, ListNode*, 
+		Environment*, Environment*);
+
+	virtual Method * isMethod();
+};
+\end{cprog}
+\caption{Classes for Object and Method}\label{obj}
+\end{figure}
+
+Methods are similar to conventional functions (and are thus subclasses of
+{\sf UserFunction}) in that they have an argument list and body.  Unlike
+conventional functions they have a receiver (which must always be an object)
+and the environment in which the method was created, as well as the
+environment in which the method is invoked.  Thus methods define a new
+message {\sf doMethod} that takes these additional arguments.
+
+A subtle point to note is that the creation environment in normal functions
+is captured when the function is defined.  For objects this environment
+cannot be defined when the methods are created, but must wait until a new
+instance is created.  Our implementation waits even longer, and passes it 
+as part of the message passing protocol.
+
+The mechanism of message passing is defined by the function {\sf apply} in
+class {\sf Object} (Figure~\ref{apply}).  Messages require a symbol for the
+first argument, which must match a method for the object.  This method is
+then invoked.  Similarly Figure~\ref{apply} shows the execution of normal
+methods (that is, those methods other than the ones provided by the
+system).  The execution context is set for
+the method, and the receiver is added as an implicit first argument, 
+called {\sf self} in every method.  The method is then invoked as if it
+were a conventional function.
+
+\begin{figure}
+\begin{cprog}
+void Object::apply(Expr & target, ListNode * args, Environment * rho)
+{
+	// need at least a message
+	if (args->length() < 1) {
+		target = error("ill formed message expression");
+		return;
+		}
+
+	Symbol * message = args->head()->isSymbol();
+	if (! message) {
+		target = error("object needs message");
+		return;
+		}
+
+	// now see if message is a method
+	Environment * meths = methods;
+	Expression * methexpr = meths->lookup(message);
+	Method * meth = 0;
+	if (methexpr) meth = methexpr->isMethod();
+	if (! meth) {
+		target = error("unrecognized method name: ", message->chars());
+		return;
+		}
+
+	// now just execute the method (take off message from arg list)
+	meth->doMethod(target, this, args->tail(), data, rho);
+}
+
+void Method::doMethod(Expr& target, Object* self, ListNode* args, 
+	Environment *ctx, Environment *rho)
+{
+	// change the execution context
+	context = ctx;
+
+	// put self on the front of the argument list
+	List newargs = new ListNode(self, args);
+
+	// and execute the function
+	apply(target, newargs, rho);
+
+	// clean up arg list
+	newargs = 0;
+}
+\end{cprog}
+\caption{Implementation of Message Passing}\label{apply}
+\end{figure}
+
+\section{Classes}
+
+Classes are simply objects.  As such, they respond to certain messages.
+In our Smalltalk interpreter there are initially two classes, {\sf Object}
+and {\sf Integer}.  
+The class {\sf Object} is a superclass of {\sf Integer}, and is typically
+the superclass of most user defined classes as well.
+There are initially three messages that classes respond to:
+
+\begin{itemize}
+\item
+{\sf subclass}.  This message is used to create new classes, as subclasses
+of existing classes.  Any arguments provided are treated as the names of
+instance variables (local state) to be generated when instances of the new
+classes are created.  The new class is returned as an object, and is
+usually immediately assigned to a global variable.
+The syntax for new classes is thus similar to the following:
+\begin{center}
+{\sf (set Foo (Object subclass x y z))}
+\end{center}
+which creates a new class with three instance variables, and assigns this
+class to the variable {\sf Foo}.  Subclasses can also access instance
+variables defined in classes.
+
+It is legal to subclass from class {\sf Integer}, although the results are not
+useful for any purpose.
+
+\item
+{\sf new}.  This message, which takes no arguments, is used to create a new
+instance of the receiver class.  The new instance is returned as the result
+of the method, as in the following:
+\begin{center}
+{\sf (set newfoo (Foo new))}
+\end{center}
+Although the class {\sf Integer} responds to the message {\sf new}, no
+useful value is returned.  (Real Smalltalk has something called 
+{\em metaclasses} that can be used to prevent certain classes from
+responding to all messages.  Our Smalltalk doesn't).
+\item
+{\sf method}.  This message is used to define a new method for a class.
+Following the keyword {\sf method} the syantx is the same as a normal
+function definition.  Within a method the pseudo-variable {\sf self} can be
+used to represent the receiver for the method.
+\begin{center}
+{\sf (Integer method square () (self * self))}
+\end{center}
+\end{itemize}
+
+Classes are represented in the same format as other objects.  They act as
+if they held two instance variables; {\sf names}, which contains a list of
+instance variable names for the class, and {\sf methods}, which contains
+the table of method definitions for the class.  Note that these are held in
+the data area for the class.  (A picture might help here...).
+
+The implementation of the method {\sf subclass} is shown in
+Figure~\ref{subclass}.  The instance variables for the parent class is
+obtained, and the new instance variables for the class added to them.
+Inheritance is implemented by creating a new empty method table, but having
+it point to the method table for the parent class.  Thus a search of the
+method table for the newly created class will automatically search the
+parent class if no overriding method is found.  These two values are
+inserted as data values in the new class object.  The methods a class
+responds to will be exactly the same as those of the parent class (thus all
+classes respond to the same messages).
+
+\begin{figure}
+\begin{cprog}
+void SubclassMethod::doMethod(Expr& target, Object* self, ListNode *args,
+	Environment *ctx, Environment *rho)
+{
+
+	// the argument list is added to the list of variables
+	ListNode * vars = self->getNames();
+	while (! args->isNil()) {
+		vars = new ListNode(args->head(), vars);
+		args = args->tail();
+		}
+
+	// the method table is empty, but points to inherited method table
+	Environment * newmeth = new Environment(emptyList, emptyList,
+			self->getMethods());
+
+	// make the new data area
+	Environment * newEnv = new Environment(emptyList, emptyList, rho);
+	newEnv->add(new Symbol("names"), vars);
+	newEnv->add(new Symbol("methods"), newmeth);
+
+	// now make the new object
+	Environment * meths = self->methods;
+	target = new Object(meths, newEnv);
+}
+
+ListNode * Object::getNames()
+{
+	Environment * datavals = data;
+	Expression * x = datavals->lookup(new Symbol("names"));
+	if ((! x) || (! x->isList())) {
+		error("impossible case in Object::getNames");
+		return 0;
+		}
+	return x->isList();
+}
+\end{cprog}
+\caption{Implementation of the {\sf subclass} method}\label{subclass}
+\end{figure}
+
+The implementation of the method {\sf new}, shown in
+Figure~\ref{newmethod}, gets the list of instance variables associated
+with the class.  A new environment is then created that assigns an empty
+value to each variable.  Using the method table stored in the data area for
+the class object a new object is then created.
+
+\begin{figure}
+\begin{cprog}
+void NewMethod::doMethod(Expr& target, Object* self, ListNode *args,
+	Environment *ctx, Environment *rho)
+{
+	// get the list of instance names
+	ListNode * names = self->getNames();
+
+	// cdr down the list, making a list of values (initially zero)
+	ListNode * values = emptyList;
+	for (ListNode *p = names; ! p->isNil(); p = p->tail())
+		values = new ListNode(new IntegerExpression(0), values);
+
+	// make the new environment for the names
+	Environment * newenv = new Environment(names, values, rho);
+
+	// make the new object
+	target = new Object(self->getMethods(), newenv);
+}
+\end{cprog}
+\caption{The method {\sf new}}\label{newmethod}
+\end{figure}
+
+\begin{figure}
+\begin{cprog}
+void MethodMethod::doMethod(Expr& target, Object* self, ListNode *args,
+	Environment *ctx, Environment *rho)
+{
+	if (args->length() != 3) {
+		target = error("method definition requires three arguments");
+		return;
+		}
+	Symbol * name = args->at(0)->isSymbol();
+	if (! name) {
+		target = error("method definition missing name");
+		return;
+		}
+
+	ListNode * argNames = args->at(1)->isList();
+	if (! argNames) {
+		target = error("method definition missing arg names");
+		return;
+		}
+	// put self on front of arg names
+	argNames = new ListNode(new Symbol("self"), argNames);
+
+	// get the method table for the given class
+	Environment * methTable = self->getMethods();
+
+	// put method in place
+	methTable->add(name, new Method(argNames, args->at(2)));
+
+	// yield as value the name of the function
+	target = name;
+}
+\end{cprog}
+\caption{The method {\sf method}}\label{methodmethod}
+\end{figure}
+
+The method used to respond to the {\sf method} command is shown in
+Figure~\ref{methodmethod}.  This is very similar to the function used to break
+apart the {\sf define} command in Chapter 1.   The only significant
+difference includes the addition of the receiver {\sf self} as an implicit
+first parameter in the argument list, and the fact that the function is
+placed in a method table, rather than in the global environment.
+
+\section{Symbols and Integers}
+
+Symbols in Smalltalk have no property other than they evaluate to
+themselves, and are guaranteed unique.
+They are easily implemented by subclassing the existing class {\sf Symbol}
+(Figure~\ref{smsymbol}), and modifying the reader/parser to recognize the
+tokens.  (Unlike symbols in real Smalltalk, our symbols
+are not objects and will not respond to any messages).
+
+\begin{figure}
+\begin{cprog}
+class SmalltalkSymbol : public Symbol {
+public:
+	virtual void eval(Expr & target, Environment *, Environment *)
+		{ target = this; }
+};
+
+static Env IntegerMethods;
+
+class IntegerObject : public Object {
+private:
+	Expr value;
+public:
+	IntegerObject(int v) : Object(IntegerMethods, 0) 
+		{ value = new IntegerExpression(v); }
+
+	virtual void print()
+		{ if (value()) value()->print(); }
+
+	virtual void free()
+		{ value = 0; }
+
+	virtual IntegerExpression * isInteger()
+		{ if (value()) return value()->isInteger(); return 0; }
+};
+\end{cprog}
+\caption{Symbols and Integers in Smalltalk}\label{smsymbol}
+\end{figure}
+
+Integers are also redefined as objects, and a built-in method {\sf
+IntegerBinaryMethod}, similarly to {\sf IntegerBinaryFunction}, is created
+to simplify the arithmetic methods.
+
+Control flow is implemented as a message to integers.  (In real Smalltalk
+control flow is implemented as messages, but to different objects).
+If the receiver is zero the first argument to the if method is returned, 
+otherwise the second argument is returned.
+
+\begin{figure}
+\begin{cprog}
+void IfMethod::doMethod(Expr & target, Object * self, 
+	ListNode * args, Environment * ctx, Environment * rho)
+{
+	if (args->length() != 2) {
+		target = error("wrong number of args for if");
+		return;
+		}
+	IntegerExpression * cond = self->isInteger();
+	if (! cond) {
+		target = error("impossible!", "no cond in if");
+		return;
+		}
+	if (cond->val())
+		args->at(0)->eval(target, valueOps, rho);
+	else
+		args->at(1)->eval(target, valueOps, rho);
+}
+\end{cprog}
+\caption{Implementation of the if method}
+\end{figure}
+
+\section{Smalltalk reader}
+
+The Smalltalk reader subclasses the reader class so as to recognize
+integers and symbols (Figure~\ref{smalltalkreader}).
+
+\begin{figure}
+\begin{cprog}
+Expression * SmalltalkReader::readExpression()
+{
+	// see if it's an integer
+	if (isdigit(*p))
+		return new IntegerObject(readInteger());
+
+	// might be a signed integer
+	if ((*p == '-') && isdigit(*(p+1))) {
+		p++;
+		return new IntegerObject(- readInteger());
+		}
+
+	// or it might be a symbol
+	if (*p == '#') {
+		char token[80], *q;
+
+		for (q = token; ! isSeparator(*p); )
+			*q++ = *p++;
+		*q = '\0';
+		return new SmalltalkSymbol(token);
+		}
+
+	// anything else, do as before
+	return Reader::readExpression();
+}
+\end{cprog}
+\caption{The Smalltalk reader}\label{smalltalkreader}
+\end{figure}
+
+\section{The big bang}
+
+To initialize the interpreter we must create the objects {\sf Object} and
+{\sf Integer}.  (Need more explanation here, but I'll just give the code
+for now).
+
+\begin{figure}
+\begin{cprog}
+initialize()
+{
+	// initialize global variables
+	reader = new SmalltalkReader;
+
+	// the only commands are the assignment command  and begin
+	Environment * vo = valueOps;
+	vo->add(new Symbol("set"), new SetStatement);
+	vo->add(new Symbol("begin"), new BeginStatement);
+
+	// initialize the global environment
+	Environment * ge = globalEnvironment;
+
+	// first create the object ``Object''
+	Environment* objMethods = new Environment(emptyList, emptyList, 0);
+	Environment* objClassMethods = new Environment(emptyList, emptyList,
+				objMethods);
+	objClassMethods->add(new Symbol("new"), new NewMethod);
+	objClassMethods->add(new Symbol("subclass"), new SubclassMethod);
+	objClassMethods->add(new Symbol("method"), new MethodMethod);
+	Environment * objData = new Environment(emptyList, emptyList, 0);
+	objData->add(new Symbol("names"), emptyList());
+	objData->add(new Symbol("methods"), objMethods);
+	ge->add(new Symbol("Object"), 
+			new Object(objClassMethods, objData));
+
+	// now make the integer methods
+	IntegerMethods = new Environment(emptyList, emptyList, objMethods);
+	Environment * im = IntegerMethods;
+	// the integer methods are just as before
+	im->add(new Symbol("+"), new IntegerBinaryMethod(PlusFunction));
+	im->add(new Symbol("-"), new IntegerBinaryMethod(MinusFunction));
+	im->add(new Symbol("*"), new IntegerBinaryMethod(TimesFunction));
+	im->add(new Symbol("/"), new IntegerBinaryMethod(DivideFunction));
+	im->add(new Symbol("="), new IntegerBinaryMethod(IntEqualFunction));
+	im->add(new Symbol("<"), new IntegerBinaryMethod(LessThanFunction));
+	im->add(new Symbol(">"), new IntegerBinaryMethod(GreaterThanFunction));
+	im->add(new Symbol("if"), new IfMethod);
+	ge->add(new Symbol("Integer"),
+			new Object(objClassMethods, objData));
+}
+\end{cprog}
+\caption{Initializing the Smalltalk interpreter}
+\end{figure}

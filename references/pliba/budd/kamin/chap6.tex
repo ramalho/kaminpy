@@ -1,0 +1,260 @@
+\chapter{The CLU interpreter}
+
+The CLU interpreter is created by introducing a new datatype, the cluster,
+and three new types of functions.  Constructors create new instances of a
+cluster, selectors access a portion of a cluster state, and modifiers change
+a portion of a cluster state.  Figure~\ref{cluhier} shows the class
+hierarchy for the classes added in this chapter.
+
+\setlength{\unitlength}{5mm}
+\begin{figure}
+\begin{picture}(25,10)(-4,-5)
+\put(-3.5,0){\sf Expression}
+\put(0,0.2){\line(1,0){1}}
+\put(1,0){\sf Function}
+\put(0,0.2){\line(1,-2){1}}
+\put(1,-2){\sf Cluster}
+\put(4,0.2){\line(1,-2){1}}
+\put(5,-2){\sf BinaryFunction}
+\put(9.5,-1.8){\line(1,0){1}}
+\put(10.5,-2){\sf Modifier}
+\put(4,0.2){\line(1,2){1}}
+\put(5,2){\sf UnaryFunction}
+\put(9.5,2.2){\line(1,0){1}}
+\put(10.5,2){\sf Selector}
+\put(4,0.2){\line(1,0){1}}
+\put(5,0){\sf Constructor}
+\put(4,0.2){\line(1,4){1}}
+\put(5,4){\sf ClusterDef}
+\end{picture}
+\caption{Class Hierarchy for the CLU interpreter}\label{cluhier}
+\end{figure}
+
+\section{Clusters}
+
+A cluster simply encapsulates a series of names and values, hiding them
+from normal examination.  The most natural way to do this is for a cluster
+to maintain an environment (Figure~\ref{cluster}).  The predicate {\sf
+isCluster} returns this environment value.
+
+\begin{figure}
+\begin{cprog}
+class Cluster : public Expression {
+private:
+	Env data;
+public:
+	Cluster(ListNode * names, ListNode * values)
+		{ data = new Environment(names, values, 0); }
+	virtual void free()
+		{ data = 0; }
+	virtual void print()
+		{ printf("<userval>"); }
+	virtual Environment * isCluster()
+		{ return data; }
+};
+
+class Constructor : public Function {
+private:
+	List names;
+public:
+	Constructor(ListNode * n);
+	virtual void free();
+	virtual void applyWithArgs(Expr &, ListNode *, Environment *);
+};
+
+void Constructor::applyWithArgs(Expr &target, ListNode *args, Environment *rho)
+{
+	ListNode * nmes = names;
+	if (args->length() != nmes->length()) {
+		target = error("wrong number of args passed to constructor");
+		return;
+		}
+	target = new Cluster(nmes, args);
+}
+\end{cprog}
+\caption{The definition of a cluster value}\label{cluster}
+\end{figure}
+
+To create a cluster requires a constructor function.  The constructor is
+provided with a list of names of the elements in the internal
+representation of the cluster, and simply insures that the arguments it is
+provided with match in number of the names it maintains.
+
+\section{Selectors and Modifiers}
+
+To access or modify the elements of a constructor requires functions called
+selectors or modifiers.  Each of these maintain as their state the name of
+the field they are responsible for.  When invoked with a constructor, the
+access or change their given field.
+
+\begin{figure}
+\begin{cprog}
+class Selector : public UnaryFunction {
+private:
+	Expr fieldName;
+public:
+	Selector(Symbol * name);
+	virtual void free();
+	virtual void applyWithArgs(Expr &, ListNode *, Environment *);
+};
+
+void Selector::applyWithArgs(Expr & target, ListNode * args, Environment * rho)
+{
+	Environment * x = args->head()->isCluster();
+	if (! x) {
+		target = error("selector given non-cluster");
+		return;
+		}
+	Symbol *s = fieldName()->isSymbol();
+	if (!s)
+		error("impossible case in selector, no symbol");
+	target = x->lookup(s);
+	if (! target())
+		error("selector cannot find symbol:", s->chars());
+}
+
+class Modifier : public BinaryFunction {
+private:
+	Expr fieldName;
+public:
+	Modifier(Symbol * name);
+	virtual void free();
+	virtual void applyWithArgs(Expr &, ListNode *, Environment *);
+};
+
+void Modifier::applyWithArgs(Expr & target, ListNode * args, Environment * rho)
+{
+	Environment * x = args->head()->isCluster();
+	if (! x) {
+		target = error("selector given non-cluster");
+		return;
+		}
+
+	// set the result to the value
+	target = args->at(1);
+	x->set(fieldName()->isSymbol(), target());
+}
+\end{cprog}
+\caption{Selectors and Modifiers for clusters}
+\end{figure}
+
+\section{Defining clusters}
+
+It thus remains only to give the (rather lengthy) definition of the
+function that generates constructor information from the textual
+description.  (We do not say generates clusters themselves, for that is the
+responsibility of the constructor functions).  This function is shown in
+Figure~\ref{clusterdef}.  It rips apart a cluster definition and does the
+right things (need a better description here, but I don't have time to
+write it now).  (Need to point out that cluster functions have an internal
+and an external name, and these are put of different environments).
+(I suppose an alternative would have been to introduce a new datatype for
+two part names, which when evaluated would look up their second part in the
+cluster provided by their first part).
+
+\begin{figure}
+\begin{cprog}
+void ClusterDef::apply(Expr & target, ListNode * args, Environment * rho)
+{
+	Expr setprefix = new Symbol("set-");
+
+	// must have at least name, rep and one def
+	if (args->length() < 3) {
+		target = error("cluster ill formed");
+		return;
+		}
+
+	// get name
+	Symbol * name = args->head()->isSymbol();
+	args = args->tail();
+	if (! name) {
+		target = error("cluster missing name");
+		return;
+		}
+
+	// now make the environment in which cluster will execute
+	Environment * inEnv = new Environment(emptyList, emptyList, rho);
+
+	// next part should be representation
+	ListNode * rep = args->head()->isList();
+	args = args->tail();
+	if (! rep) {
+		target = error("cluster missing rep");
+		return;
+		}
+	Symbol *s = rep->at(0)->isSymbol();
+	if (! (s && (*s == "rep"))) {
+		target = error("cluster missing rep");
+		return;
+		}
+	rep = rep->tail();
+
+	// make the name into a constructor with the representation
+	inEnv->add(name, new Constructor(rep));
+\end{cprog}
+\caption{The cluster recognition function}\label{clusterdef}
+\end{figure}
+\begin{figure}
+\begin{cprog}
+	// now run dow the rep list, making accessor functions
+	while (! rep->isNil()) {
+		s = rep->head()->isSymbol();
+		if (! s) {
+			target = error("ill formed rep in cluster");
+			return;
+			}
+		inEnv->add(s, new Selector(s));
+		catset(inEnv, setprefix()->isSymbol(), "",
+			s, new Modifier(s));
+		rep = rep->tail();
+		}
+	
+	// remainder should be define commands
+	while (! args->isNil()) {
+		ListNode * body = args->head()->isList();
+		if (! body) {
+			target = error("ill formed cluster");
+			return;
+			}
+		s = body->at(0)->isSymbol();
+		if (! (s && (*s == "define"))) {
+			target = error("missing define in cluster");
+			return;
+			}
+		s = body->at(1)->isSymbol();
+		if (! s) {
+			target = error("missing name in define");
+			return;
+			}
+
+		// evaluate body to define new function
+		Expr temp;
+		body->eval(temp, commands, inEnv);
+		// make outside form
+		catset(rho, name, "$", s, inEnv->lookup(s));
+		temp = 0;
+
+		// get next function
+		args = args->tail();
+		}
+
+	// what do we return?
+	target = 0;
+	setprefix = 0;
+}
+
+static void catset(Environment * rho, Symbol * left, char * mid, 
+		Symbol * right, Expression * val)
+{	char buffer[120];
+
+	// catenate the two symbols
+	strcpy(buffer, left->chars());
+	strcat(buffer, mid);
+	strcat(buffer, right->chars());
+
+	// now put the new value into rho
+	rho->add(new Symbol(buffer), val);
+}
+\end{cprog}
+\caption{The cluster recognition function (continued)}
+\end{figure}

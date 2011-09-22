@@ -1,0 +1,225 @@
+\chapter{The SASL interpreter}\label{sasl}
+
+The SASL interpreter is largely constructed by removing features from the
+Scheme interpreter, such as while loops and so on, and changing the 
+implementation of the {\sf cons} function to add delayed evaluation.
+Figure~\ref{saslhier} shows the class hierarchy for the classes added in
+this chapter.
+
+\setlength{\unitlength}{5mm}
+\begin{figure}
+\begin{picture}(25,10)(-4,-5)
+\put(-3.5,0){\sf Expression}
+\put(0,0.2){\line(1,0){1}}
+\put(1,0){\sf Function}
+\put(0,0.2){\line(1,-2){1}}
+\put(1,-2){\sf Thunk}
+\put(4,0.2){\line(1,-2){1}}
+\put(5,-2){\sf UserFunction}
+\put(9.5,-1.8){\line(1,0){1}}
+\put(10.5,-2){\sf LazyFunction}
+\put(4,0.2){\line(1,2){1}}
+\put(5,2){\sf SaslConsFunction}
+\put(4,0.2){\line(1,0){1}}
+\put(5,0){\sf LambdaFunction}
+\end{picture}
+\caption{Class Hierarchy for expressions in the SASL interpreter}\label{saslhier}
+\end{figure}
+
+\subsection{Thunks}
+
+Delayed evaluation is provided by adding a new expression type, called the
+{\em thunk}.  Figure~\ref{thunk} shows the data structure used to represent
+this type of value.  Every thunk maintains a boolean value indicating
+whether the thunk has been evaluated yet, an expression (representing
+either the unevaluated or evaluated expression, depending upon the state of
+the boolean flag), and a context in which the expression is to be
+evaluated.  Thunks print either as three dots, if they have not yet been
+evaluated, or as the printed representation of their value, if they have.
+
+\begin{figure}
+\begin{cprog}
+class Thunk : public Expression {
+private:
+	int evaluated;
+	Expr value;
+	Env context;
+public:
+	Thunk(Expression *, Environment *);
+
+	virtual void free();
+	virtual void print();
+	virtual Expression * touch();
+	virtual void eval(Expr &, Environment *, Environment *);
+
+	virtual IntegerExpression * isInteger();
+	virtual Symbol * isSymbol();
+	virtual Function * isFunction();
+	virtual ListNode * isList();
+};
+
+void Thunk::print()
+{
+	if (evaluated)
+		value()->print();
+	else
+		printf("...");
+}
+
+Expression * Thunk::touch()
+{
+	// if we haven't already evaluated, do it now
+	if (! evaluated) {
+		evaluated = 1;
+		Expression * start = value();
+		if (start)
+			start->eval(value, valueOps, context);
+		}
+	Expression * val = value();
+	if (val)
+		return val->touch();
+	return val;
+}
+\end{cprog}
+\caption{Definition of Thunks}\label{thunk}
+\end{figure}
+
+Here we finally see an overridden definition for the method {\em touch}.
+You will recall that this method was defined in Chapter 1, and that all
+other expressions merely return their value as the result of this
+expression.  Thunks, on the other hand, will evaluate themselves if
+touched, and then return their new evaluated result.  With the addition of
+this feature many of the definitions we have presented in earlier chapters,
+such as the definitions of {\sf car} and {\sf cdr}, hold equally well 
+when given thunks as arguments.
+
+Since thunks can represent lists, symbols, integers and so on, the
+predicate methods {\sf isSymbol} and the like must be redefined as well.
+If the thunk represents an evaluated value, these simply return the result
+of testing that value (Figure~\ref{thunkpred}).
+
+\begin{figure}
+\begin{cprog}
+void Thunk::eval(Expr & target, Environment * valusops, Environment * rho)
+{
+	touch();
+	value()->eval(target, valusops, rho);
+}
+
+ListNode * Thunk::isList()
+{
+	// if its evaluated try it out
+	if (evaluated) return value()->isList();
+
+	// else it's not
+	return 0;
+}
+
+Symbol * Thunk::isSymbol()
+{
+	if (evaluated) return value()->isSymbol();
+	return 0;
+}
+
+Function * Thunk::isFunction()
+{
+	if (evaluated) return value()->isFunction();
+	return 0;
+}
+
+IntegerExpression * Thunk::isInteger()
+{
+	if (evaluated) return value()->isInteger();
+	return 0;
+}
+\end{cprog}
+\caption{Thunk predicates}\label{thunkpred}
+\end{figure}
+
+\section{Lazy Cons}
+
+The SASL cons function differs from the Scheme version in producing
+a list node containing a pair of thunks, rather than a pair of values
+(Figure~\ref{saslcons}).  Class {\sf SaslConsFunction} must now be a
+subclass of {\sf Function} and not {\sf BinaryFunction}, because it must
+grab its arguments before they are evaluated.  Thus it must itself check to
+see that only two arguments are passed to the function.
+
+\begin{figure}
+\begin{cprog}
+class SaslConsFunction : public Function {
+public:
+	virtual void apply(Expr & target, ListNode * args, Environment *);
+};
+
+void SaslConsFunction::apply(Expr & target, ListNode * args, Environment * rho)
+{
+	// check length
+	if (args->length() != 2) {
+		target = error("cons requires two arguments");
+		return;
+		}
+
+	// make thunks for car and cdr
+	target = new ListNode(new Thunk(args->at(0), rho), 
+		new Thunk(args->at(1), rho));
+}
+\end{cprog}
+\caption{The Sasl Lazy Cons function}\label{saslcons}
+\end{figure}
+
+\section{Lazy User Functions}
+
+User defined functions must be provided with lazy evaluation semantics as
+well.  This is accomplished by defining a new class {\sf LazyFunction}
+(Figure~\ref{lazyfunction}).  Lazy functions act just like user functions
+from previous chapters, only they do not evaluate their arguments.   Thus
+the function body is evaluated by the method {\sf apply}, rather than
+passing the evaluated arguments on to the method {\sf applyWithArgs}.
+The lambda function from the previous chapter is modified to produce
+an instance of {\sf LazyFunction}, rather than {\sf UserFunction}.
+
+\begin{figure}
+\begin{cprog}
+class LazyFunction : public UserFunction {
+public:
+	LazyFunction(ListNode * n, Expression * b, Environment * c)
+		: UserFunction(n, b, c) {}
+	virtual void apply(Expr &, ListNode *, Environment *);
+};
+
+//	convert arguments into thunks
+static ListNode * makeThunks(ListNode * args, Environment * rho)
+{
+	if ((! args) || (args->isNil()))
+		return emptyList;
+	Expression * newcar = new Thunk(args->head(), rho);
+	return new ListNode(newcar, makeThunks(args->tail(), rho));
+}
+
+void LazyFunction::apply(Expr & target, ListNode * args, Environment * rho)
+{
+	// number of args should match definition
+	ListNode * anames = argNames;
+	if (anames->length() != args->length()) {
+		error("argument length mismatch");
+		return;
+		}
+
+	// convert arguments into thunks
+	ListNode * newargs = makeThunks(args, rho);
+
+	// make new environment
+	Env newrho = new Environment(anames, newargs, context);
+
+	// evaluate body in new environment
+	if (body())
+		body()->eval(target, valueOps, newrho);
+	else
+		target = 0;
+
+	newrho = 0;
+}
+\end{cprog}
+\caption{The implementation of lazy functions}\label{lazyfunction}
+\end{figure}

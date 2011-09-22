@@ -1,0 +1,232 @@
+-> -> sqr
+-> abs
+-> +1
+-> and
+-> or
+-> not
+-> <>
+-> >=
+-> <=
+-> mod
+-> min
+-> max
+-> -> > > > > > > > > > > > > > > > > > > > > > > > > new
+abscissa
+ordinate
+reflect
+rotate
+compare
+quadrant
+sqrdist
+Point
+-> <userval>
+
+-> -3
+
+-> 4
+
+-> 4
+
+-> -3
+
+-> -3
+
+-> 3
+
+-> -4
+
+-> -4
+
+-> 3
+
+-> 3
+
+-> <userval>
+
+-> 1
+
+-> 1
+
+-> > > enclosed-area
+-> 10
+
+-> 10
+
+-> > > > > > > > > > > > > > > > > > > > > > > > > > > > > new
+abscissa
+ordinate
+reflect
+rotate
+compare
+quadrant
+compute-quad
+sqrdist
+Point
+-> <userval>
+
+-> 2
+
+-> 4
+
+-> 4
+
+-> -3
+
+-> -3
+
+-> 4
+
+-> -4
+
+-> -4
+
+-> 3
+
+-> 3
+
+-> <userval>
+
+-> 1
+
+-> 1
+
+-> > > enclosed-area
+-> 10
+
+-> 10
+
+-> -> > > > > > > > > > > nil
+null?
+cons
+car
+cdr
+rplaca
+rplacd
+List
+-> <userval>
+
+-> <userval>
+
+-> 1
+
+-> 1
+
+-> 1
+
+-> 1
+
+-> 2
+
+-> 2
+
+-> 3
+
+-> 3
+
+-> 3
+
+-> 3
+
+-> 3
+
+-> > length
+-> 2
+
+-> 2
+
+-> 2
+
+-> 2
+
+-> -> > nth
+-> > changenth
+-> -> > > > > > > > > > > > > > > > new
+index
+assign
+zerolist
+out-of-bounds
+Array
+-> <userval>
+
+-> 0
+
+-> 0
+
+-> 0
+
+-> 1
+4
+9
+16
+25
+36
+49
+64
+81
+100
+0
+
+-> -> > > > > > > fst
+snd
+mkPair
+Pair
+-> -> > > > > assoc
+-> -> > > > > > > > > > > > > > > > > > > > new
+index
+assign
+out-of-bounds
+SpArray
+-> <userval>
+
+-> 0
+
+-> 0
+
+-> 0
+
+-> 1
+4
+9
+16
+25
+36
+49
+64
+81
+100
+0
+
+-> -> > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > create
+degree
+coeff
+zero?
+add
+minus
+sub
+mul
+prnt
+set-coeff
+remove-zeros
+Poly
+-> > > > > > > > > > diff
+-> <userval>
+
+-> <userval>
+
+-> <userval>
+
+-> 10
+1
+3
+0
+0
+
+-> 10
+
+-> 1
+
+-> 3
+
+-> 0
+
+-> 

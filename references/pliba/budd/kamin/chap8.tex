@@ -1,0 +1,898 @@
+\chapter{The Prolog interpreter}
+
+As with chapters 3 and 7, I have in this chapter taken great liberties with
+the syntax used by Kamin in his interpreter.  However, unlike chapters 3 and 7,
+where my intent was to make the interpreters closer in spirit to the
+original language, my intent here is to simplify the interpreter.
+Specifically, I wanted to build on the base interpreter, just as we have done
+for all other languages.  I am able to do this by adopting {\em continuations}
+as the fundamental basis for my implementation, and by basing the code on
+slightly different primitives.
+
+The language used by this interpreter has the following characteristics:
+\begin{itemize}
+\item
+As in real prolog, the only basic objects are symbols.
+I've even tossed out integers, just to simplify things.
+Symbols have no meaning other than their uniqueness.
+Those symbols beginning with lower case letters are atomic, while those
+beginning with upper case letters are variables.
+\item
+There are two basic statement types, the {\sf define} statement we
+have seen all through the interpreters, and a new statement called 
+{\sf query}.   The later is used to form questions.
+\item
+The bodies of functions or queries can be composed of four types of
+relations:
+\begin{itemize}
+\item
+{\sf (print x)} which if x is defined prints the value of x and is successful,
+and if x is not defined is not successful.
+\item
+{\sf (:=: x y)} which attempts to unify x and y, which can be either 
+variables or symbols.  The order of arguments is unimportant.
+\item
+{\sf (and $rel_1$ $rel_2$ ... )} which can take any number of 
+relational arguments and is successful if all the relations are successful.  
+Relations are tried in order.
+\item
+{\sf (or $rel_1$ $rel_2$ ... )} which can take any number of relational 
+arguments and is successful if one one of the relations is successful.  
+They are tried in order.
+\end{itemize}
+\end{itemize}
+
+For example, suppose {\sf sam} is the father of {\sf alice}, and {\sf alice} 
+is the mother of {\sf sally}.  We might encode this in a parent database 
+as follows:
+
+\begin{cprog}
+-> (define parent (X Y)
+	(or
+		(and (:=: X alice) (:=: Y sally))
+		(and (:=: X sam) (:=: Y alice)) 
+	))
+\end{cprog}
+
+The query statement can then be used to ask queries of the database.
+For example, we can find out who is the parent of {\sf alice} as follows:
+
+\begin{cprog}
+-> (query (and (parent X alice) (print X)))
+sam
+ok
+\end{cprog}
+
+Or we can find the child of {\sf alice} with the following:
+
+\begin{cprog}
+-> (query (and (parent alice X) (print X)))
+sally
+ok
+\end{cprog}
+
+If we ask a question that does not have an answer, the response not-ok is
+printed.
+
+\begin{cprog}
+-> (query (and (parent fred X) (print X)))
+not ok
+\end{cprog}
+
+Prolog style rules can be introduced using the same form we have been using
+for functions.
+
+\begin{cprog}
+-> (define grandparent (X Y)
+	(and (parent X Z) (parent Z Y)))
+-> (query (and (grandparent A B) (print A) (print B)))
+sam
+sally
+ok
+\end{cprog}
+
+There is no built-in way to force a relation to cycle through all
+alternatives.  However, this is easily accomplished by making a relation
+that will always fail, for example trying to unify apples with oranges:
+
+\begin{cprog}
+-> (define fail () (:=: apples oranges))
+\end{cprog}
+
+We can then use this to print out all the parents in our database.
+Notice that not-ok is printed, since we eventually fail.
+
+\begin{cprog}
+-> (query (and (parent X Y) (print X) (fail)))
+sam
+alice
+not ok
+\end{cprog}
+
+Note - although it might appear the use of and's and or's is more powerful
+than writing rules in horn clauses, in fact they are identical; although
+horn clauses will often require the introduction of unnecessary names.
+I myself find this formulation more natural, although I'm not exactly
+unbiased.
+
+Unification of two unknown symbols works as expected.  If any symbol
+subsequently becomes defined, the other is defined as well.
+\begin{cprog}
+-> (define same (X Y) (:=: X Y))
+-> (query (and (same A B) (:=: A sally) (print B)))
+sally
+ok
+\end{cprog}
+
+I will divide the discussion of the implementation into three parts.
+These are unification, symbol management, and backtracking.
+
+\section{Unification}
+
+Unification is the basis for logic programming.  Using unification, unbound
+variables can be bound together.  As we saw in the last example, this is
+more than simple assignment.  If two unknown variables are unified together
+and subsequently one is bound, the other should be bound also.
+Unification also differs
+from assignment in that it can be ``undone'' during the process of backtracking.
+
+Unification is most easily implemented by introducing a level of
+indirection.  Prolog values will be represented by a new type of
+expression, called {\sf PrologValue} (Figure~\ref{prologvalue}).
+Instances of this class maintain a data value, which is either undefined
+(that is, null), a symbol, or another prolog value.
+The prolog reader is modified so as to return a prolog value were formerly a
+symbol was returned.  (Also the reader will no longer recognize integers,
+which are not used in our simplified interpreter).
+
+A prolog value that contains a symbol is used to represent the prolog
+symbol of the same name.
+A prolog value that contains an empty data value represents a currently
+unbound value.  Finally a prolog value that points to another prolog value
+represents the unification of the first value with the second.
+Whenever we need the value of a prolog symbol, we first run down the chain
+of indirections to get to the bottom of the sequence.
+(This is done automatically by the overridden method {\sf isSymbol}, which
+will yield the symbol value behind arbitrary levels of indirection if a
+prolog value represents a symbol.)
+
+\begin{figure}
+\begin{cprog}
+class PrologValue : public Expression {
+private:
+	Expr data;
+
+public:
+	PrologValue(Expression * d) { data = d; }
+
+	virtual void free() { data = 0; }
+	virtual void print();
+	virtual void eval(Expr &, Environment *, Environment *);
+	virtual Symbol * isSymbol();
+	virtual PrologValue * isPrologValue() { return this; }
+
+	int isUndefined() 			{ return data() == 0; }
+	void setUndefined() 			{ data = 0; }
+	PrologValue * indirectPtr();
+	void setIndirect(PrologValue *v) 	{ data = v; }
+};
+\end{cprog}
+\caption{The class declaration for prolog values}\label{prologvalue}
+\end{figure}
+
+The unification algorithm is shown in Figure~\ref{unify}.  For reasons we
+will return to when we discuss backtracking, the algorithm takes three
+arguments.  The first is a reference to a pointer to a prolog value.
+If the unification process changes the value of either the the two other
+arguments, the pointer in the first argument is set to the altered value.
+
+\begin{figure}
+\begin{cprog}
+static int unify(PrologValue *& c, PrologValue * a, PrologValue * b)
+{
+
+	// if either one is undefined, set it to the other
+	if (a->isUndefined()) {
+		c = a;
+		a->setIndirect(b);
+		return 1;
+		}
+	if (b->isUndefined()) {
+		c = b;
+		b->setIndirect(a);
+		return 1;
+		}
+
+	// if either one are indirect, run down chain
+	PrologValue * indirval;
+	indirval = a->indirectPtr();
+	if (indirval)
+		return unify(c, indirval, b);
+	indirval = b->indirectPtr();
+	if (indirval)
+		return unify(c, a, indirval);
+
+	// both must now be symbolic, work if the same
+	c = 0;
+	Symbol * as = a->isSymbol();
+	Symbol * bs = b->isSymbol();
+	if ((! as) || (! bs)) 
+		error("impossible", "unification of non-symbols");
+	else if (strcmp(as->chars(), bs->chars()) == 0)
+		return 1;
+	return 0;
+}
+\end{cprog}
+\caption{The Unification process}\label{unify}
+\end{figure}
+
+The unification process divides naturally into three parts.  If either
+argument is undefined, it is changed so as to point to the other arguments.
+This is true regardless of the state of the other argument.  This is how
+two undefined variables can be unified - the first is set to point to the
+second.   If the second is subsequently changed, the first will still
+indirectly point to the new value.  Suppose it is, however, the first that
+is subsequently changed?  In that case the next portion of the unification
+algorithm is entered.  If both arguments are defined and either one is an
+indirection, then we simply try to unify the next level down in the pointer
+chains.  (Note: Lots of pictures would make this clearer, but I don't have
+time right now..).  If neither argument is undefined nor an indirection,
+they both must be symbols.  In that case, unification is successful if and
+only if they have the same textual representation.
+
+\section{Symbol Management}
+
+The only significant problem here is that symbolic constants must evaluate to 
+themselves and that symbolic variables can be introduced without
+declaration.  We see the latter in sequences such as:
+
+\begin{cprog}
+-> (define grandparent (X Y)
+	(and (parent X Z) (parent Z Y)))
+-> (query (and (grandparent A B) (print A) (print B)))
+sam
+sally
+ok
+\end{cprog}
+
+Here the variable Z suddenly appears without prior use.  The solution to
+both of these problems is found in the code used to respond to the {\sf
+eval} request for a Prolog value.  This code is shown in
+Figure~\ref{prologeval}.  The virtual method {\sf isSymbol} runs down any
+indirection links, returning the symbol data value if the last value in a
+chain of indirections represents a symbolic constant.
+If a symbol is found, we first look to see if the symbol is bound in the
+current environment.  If so we simply return its binding\footnote{Checking
+for bindings before checking the first letter allows rules to begin with
+lower case letters, which seems to be more natural to most programmers.}.  
+If not, if the
+symbol begins with a lower case letter it evaluates to itself, and so we
+simply return it.  If it is not a symbolic constant, than it is a new
+symbolic variable, and we add a binding to the current environment to
+indicate that the value is so-far undefined.  Thus new symbols are added to
+the current environment as they are encountered, instead of generating
+error messages as they did in previous interpreters.
+
+\begin{figure}
+\begin{cprog}
+Symbol * PrologValue::isSymbol()
+{
+	PrologValue * iptr = indirectPtr();
+	if (iptr)
+		return iptr->isSymbol();
+	if (! isUndefined())
+		return data()->isSymbol();
+	return 0;
+}
+
+void PrologValue::eval(Expr&target, Environment*valueOps, Environment*rho)
+{
+	Symbol * s = isSymbol();
+	if (s) {
+		char * p = s->chars();
+		Expression * r = rho->lookup(s);
+		if (r) {
+			target = r;
+			return;
+			}
+		// symbol is not known
+		// if lower case, eval to itself
+		if ((*p >= 'a') && (*p <= 'z')) {
+			// symbols eval to themselves
+			target = this;
+			return;
+			}
+		// else make a new symbol
+		target = new PrologValue(0);
+		rho->add(s, target());
+		return;
+		}
+	target = this;
+	return;
+}
+\end{cprog}
+\caption{Evaluation of a prolog symbol}\label{prologeval}
+\end{figure}
+
+\section{Backtracking}
+
+The seem to be two general approaches to implementing logic programming
+languages.  The technique used by most modern prolog systems is called the
+WAM, or Warren Abstract Machine.  The WAM performs backtracking by not
+popping the activation frame stack when a procedure is terminated, and
+saving enough information to restart the procedure in a record called the
+``choice point''.  Since in our interpreters calling a function is performed
+by recursively calling evaluation routines inside the interpreter, the
+activation stack for the users program is held in part in the activation
+stack for the interpreter itself.  Thus it is difficult for us to
+manipulate the activation record stack directly.
+The alternative technique, which is actually historically older, is to
+build up an unevaluated expression that represents what it is you want to 
+do next before
+you ever start execution.  This is called a continuation, and we were
+introduced to this idea in the chapter on Scheme.
+When we are faced with a choice, we can then try one alternative and the
+continuation, and if that doesn't work try the next.
+
+In general continuations are simply arbitrary expressions representing
+``what to do next''.  In our case they will always return a boolean value,
+indicating whether they are to be considered successful or not.
+We will sometimes refer to the continuation as the ``future'', since it
+represents the calculation we want to perform in the future.
+
+In order to illustrate how backtracking can be implemented using
+continuation, let us consider the following invocation of our family
+database:
+
+\begin{cprog}
+(query (and (grandparent sam A) (print A)))
+\end{cprog}
+
+There are two important points to note.  The first is that the general
+approach will be a two step process, construct the future that represents
+the calculation we want to do, then do it.  The second point is that the
+details are exceedingly messy; you should be eternally grateful that it is
+the computer that is performing this task, and not you.
+
+To begin, the continuation that represents what it is we want to do after
+evaluating the query is the null continuation, an expression that merely
+returns true.
+In order to try to keep track of the multiple levels of evaluation, let us
+write this as follows:
+
+\begin{cprog}
+(and (grandparent sam A) (print A)) [ true ]
+\end{cprog}
+
+This says that we want to evaluate the {\sf and} relation, and then do the
+calculation given by the bracketed expression.
+
+Consider now the meaning of {\sf and}.  The and expression should evaluate
+the first relation, and if successful evaluate the second, and finally if
+that is successful evaluate the future given to the original expression.
+What then is the ``future'' of the first relation?  It is simply the second
+relation and the original future.  That is, the calculation we want to
+perform if the first relation is successful is simply the following:
+
+\begin{cprog}
+(print A) [ true ]
+\end{cprog}
+
+We can wrap this in a bracket in order to make a continuation in
+our form out of it.  
+Using {\em this} as the future for the first relation gives us the
+following:
+
+\begin{cprog}
+(grandparent sam A) [ (print A) [ true ] ]
+\end{cprog}
+
+We are in effect turning the calculation inside out.  We have replaced the
+{\sf and} conjunction with a list of expressions to evaluate in the future.
+
+The invocation of the {\sf grandparent} relation causes the expression to
+be replaced by the function definition, with the arguments suitably bound
+to the parameters.   That is, the effect is the same as:\footnote{We will
+use textual replacement of the parameters by the arguments in our example,
+although in practice the effect is achieved via a level of indirection
+provided by environments, as in all the interpreters we have studied.}
+
+\begin{cprog}
+(and (parent sam Z) (parent Z A)) [ (print A) [ true ] ]
+\end{cprog}
+
+We have already analyzed the meaning of the {\sf and} relation.  The future
+we want to provide for the first relation is the expression yielded by:
+
+\begin{cprog}
+(parent Z A) [ (print A) [ true ] ]
+\end{cprog}
+
+As before, we can expand the invocation of the {\sf parent} relation by
+replacing it by its definition, making suitable transformations of the
+argument values.
+
+\begin{cprog}
+(or
+	(and (:=: Z alice) (:=: A sally))
+	(and (:=: Z sam) (:=: A alice)) )
+		[ (print A) [ true ] ]
+\end{cprog}
+
+The {\sf or} relation should try each alternative in turn, passing it as
+the future the continuation passed to the or.  If any is successful we
+should return success, otherwise the or should fail.
+Thus we can distribute the future to each clause of the or, and rewrite it
+as follows:\footnote{The fact that we are replacing or by a conditional 
+may seem odd,
+but the more important point is that we have moved the evaluation of the
+future down to each of the arguments to the or expression.}
+
+\begin{cprog}
+if (and (:=: Z alice) (:=: A sally))
+		[ (print A) [ true ] ]
+then return true
+else if (and (:=: Z sam) (:=: A alice)) )
+		[ (print A) [ true ] ]
+then return true
+else return false
+\end{cprog}
+
+If we perform the already-defined transformations on the {\sf and} 
+relations we obtain the following:
+
+\begin{cprog}
+if (:=: Z alice) [ (:=: A sally) [ (print A) [ true ] ] ]
+then return true
+else if (:=: Z sam) [ (:=: A alice) [ (print A) [ true ] ] ]
+then return true
+else return false
+\end{cprog}
+
+Recall that this was all performed just to construct the continuation 
+for the first clause in an earlier expression.
+Thus the expression we are now working on is as follows:
+
+\begin{cprog}
+(parent sam Z) [
+	if (:=: Z alice) [ (:=: A sally) [ (print A) [ true ] ] ]
+	then return true
+	else if (:=: Z sam) [ (:=: A alice) [ (print A) [ true ] ] ]
+	then return true
+	else return false ]
+\end{cprog}
+
+We before, we can expand the call on {\sf parent} by its
+definition:\footnote{I warned you about the messy details!}
+
+\begin{cprog}
+(or
+	(and (:=: sam alice) (:=: Z sally))
+	(and (:=: sam sam) (:=: Z alice)))
+[ if (:=: Z alice) [ (:=: A sally) [ (print A) [ true ] ] ]
+	then return true
+	else if (:=: Z sam) [ (:=: A alice) [ (print A) [ true ] ] ]
+	then return true
+	else return false ]
+\end{cprog}
+
+Once again distributing the future along each argument of the or expression
+yields:
+
+\begin{cprog}
+if (and (:=: sam alice) (:=: Z sally))
+	[ if (:=: Z alice) [ (:=: A sally) [ (print A) [ true ] ] ]
+	then return true
+	else if (:=: Z sam) [ (:=: A alice) [ (print A) [ true ] ] ]
+	then return true
+	else return false ]
+then return true
+else if (and (:=: sam sam) (:=: Z alice))
+	[ if (:=: Z alice) [ (:=: A sally) [ (print A) [ true ] ] ]
+	then return true
+	else if (:=: Z sam) [ (:=: A alice) [ (print A) [ true ] ] ]
+	then return true
+	else return false ]
+else return false
+\end{cprog}
+
+Performing yet one more time the transformations on the {\sf and} relations
+yields:
+
+\begin{cprog}
+if (:=: sam alice) [ (:=: Z sally) 
+	[ if (:=: Z alice) [ (:=: A sally) [ (print A) [ true ] ] ]
+	then return true
+	else if (:=: Z sam) [ (:=: A alice) [ (print A) [ true ] ] ]
+	then return true
+	else return false ] ]
+then return true 
+else if (:=: sam sam) [ (:=: Z alice)
+	[ if (:=: Z alice) [ (:=: A sally) [ (print A) [ true ] ] ]
+	then return true
+	else if (:=: Z sam) [ (:=: A alice) [ (print A) [ true ] ] ]
+	then return true
+	else return false ]
+then return true
+else return false
+\end{cprog}
+
+This is the final continuation that is constructed by the query expression.
+The most important feature of this expression is that it can be evaluated
+in a forward fashion, without backtracking.
+Having generated it, the next step is execution.  Contrast this with the
+description we provided earlier.  First an attempt is made to unify the
+symbols {\sf sam} and {\sf alice}.  This fails, and thus the continuation 
+for the first conditional is ignored.  Next an attempt is made to unify 
+the symbols {\sf sam} and {\sf sam}.  This is successful, and thus we 
+evaluate the continuation to the next expression.  The continuation unifies 
+{\sf Z} and {\sf alice}, binding the left-hand variable to the right-hand 
+symbol.  The continuation for that expression then trys to unify {\sf Z} and 
+{\sf alice}, which is successful.  Thus variable {\sf A} is bound to 
+{\sf sally}, and is printed.\footnote{Observant readers will have noted
+that some of the conditionals could have been evaluated during the
+construction of the continuation.  This is true, and is an important
+optimization in real systems.}
+
+Having described the general approach our interpreter will follow, we will
+now go on to provide the specific details.
+
+Our continuations are built around a new datatype, which we will call the
+{\sf Continuation}.
+A continuation should be thought of as an unevaluated boolean expression.
+The continuation performs some action, which may
+or may not succeed.   The success of the action is indicated by the boolean
+value returned.  
+The class Continuation is shown in Figure~\ref{relation}.  The routine used to
+invoke a relation is the virtual method {\sf withContinuation}, which takes
+as argument the future for the continuation.
+
+\begin{figure}
+\begin{cprog}
+class Continuation : public Expression {
+public:
+	virtual int withContinuation(Continuation *);
+	virtual void print() { printf("<future>"); }
+	virtual Continuation * isContinuation() { return this; }
+};
+
+static Continuation * nothing;	// the null continuation
+
+int Continuation::withContinuation(Continuation * future)
+{
+	// default is to always work
+	return 1;
+}
+\end{cprog}
+\caption{The class {\sf Continuation}}\label{relation}
+\end{figure}
+
+Initially there is nothing we want to do in the future.  So the initial
+relation simply ignores its future, does nothing and always succeeds.  In fact, 
+in our implementation we maintain a
+global variable called {\sf nothing} to hold this relation.  You can think
+of this variable as maintaining the relation $[$ true $]$.
+
+The simplest relation is the one correspond to the command to print.
+When a print relation is created, the value it will eventually print is
+saved as part of the relation.
+If the argument passed to the print relation is, following any indirection,
+a symbolic value than it is printed out, and the future passed to the
+relation is invoked.  If the argument was not a symbol, or if the future
+calculation was unsuccessful,
+then the relation indicates its failure by returning a zero
+value.  The code to accomplish this is shown in Figure~\ref{printrel}.
+
+\begin{figure}
+\begin{cprog}
+class PrintContinuation : public Continuation {
+private:
+	Expr val;
+
+public:
+	PrintContinuation(Expression * x) { val = x; }
+	virtual void free() { val = 0; }
+	virtual int withContinuation(Continuation *);
+};
+
+int PrintContinuation::withContinuation(Continuation * future)
+{
+	// see if we are a symbol, if so print it out
+	Symbol * s = val()->isSymbol();
+	if (s) {
+		printf("%s\n", s->chars());
+		return future->withContinuation(nothing);
+		}
+	return 0;
+}
+\end{cprog}
+\caption{The print relation}\label{printrel}
+\end{figure}
+
+Next let us consider the unification relation.  As with printing, the two
+expressions representing the elements to be unified are saved when the
+unification operator is encountered during the construction of the future.  
+When we invoke this relation the two
+arguments are unified, using the algorithm we have previously described.
+If this unification is successful the relation 
+attempts to evaluate the future continuation.
+Only if both of these are successful does
+the relation return one.  If either the unification fails or the future
+fails then the binding created by the {\sf unify} procedure is undone and
+failure is reported.  (Figure~\ref{unifyrel}).
+
+\begin{figure}
+\begin{cprog}
+class UnifyContinuation : public Continuation {
+private:
+	Expr left;
+	Expr right;
+public:
+	UnifyContinuation(Expression * a, Expression * b)
+		{ left = a; right = b; }
+	virtual void free()
+		{ left = 0; right = 0; }
+	virtual int withContinuation(Continuation *);
+};
+
+int UnifyContinuation::withContinuation(Continuation * future)
+{
+	PrologValue * a = left()->isPrologValue();
+	PrologValue * b = right()->isPrologValue();
+
+	// the following shouldn't ever happen, but check anyway
+	if ((!a) || (!b)) {
+		error("impossible", "missing prolog values in unification");
+		return 0;
+		}
+
+	// now try unification
+	PrologValue * c = 0;
+	if (unify(c, a, b) && future->withContinuation(nothing))
+		return 1;
+
+	// didn't work, undo assignment and fail
+	if (c) 
+		c->setUndefined();
+	return 0;
+}
+\end{cprog}
+\caption{The unification relation}\label{unifyrel}
+\end{figure}
+
+Next consider the {\sf or} relation (Figure~\ref{orrel}).  
+This relation takes some number of 
+argument relations.  It tries each in turn, followed by the future it has
+been provided with.  If any succeeds then it returns a true value,
+otherwise if all fail it returns a failure indication.
+
+\begin{figure}
+\begin{cprog}
+class OrContinuation : public Continuation {
+private:
+	List relArgs;
+public:
+	OrContinuation(ListNode * args) { relArgs = args; }
+	virtual void free() { relArgs = 0; }
+	virtual int withContinuation(Continuation *);
+};
+
+int OrContinuation::withContinuation(Continuation * future)
+{
+	ListNode * args;
+	// try each alternative in turn
+	for (args = relArgs; ! args->isNil(); args = args->tail()) {
+		Continuation * r = args->head()->isContinuation();
+		if (! r) {
+			error("or argument is non-relation");
+			return 0;
+			}
+		if (r->withContinuation(future)) return 1;
+		}
+	// nothing worked
+	return 0;
+}
+\end{cprog}
+\caption{The {\sf or} relation}\label{orrel}
+\end{figure}
+
+It is in the {\sf or} relation that backtracking occurs, although it is
+difficult to tell from the code shown here.  Recall that the unification
+algorithm undoes the effect of any assignment if the continuation passed to
+it cannot be performed.  Thus the future that is passed to the {\sf or} 
+relation may be invoked several times before we finally find a sequence of
+assignments that works.
+
+The {\sf and} relation is perhaps the most interesting.  To understand this
+let us first take the case of only two relations, which we will call {\em
+rel1} and {\em rel2}.  Let {\sf f} represent the continuation 
+we wish to evaluate if the {\sf and} relation is successful.  What then is
+the future we should pass to the first relation?  If the first relation is
+successful, we want to evaluate the second relation and then the
+continuation.  Thus the future for the first relation is the composition of
+the future for the second relation and the original continuation.
+This can be written as {\sf rel2(f)}, but we must make it into a
+continuation, we we create a new datatype called a {\sf
+CompositionContinuation}.  Interestingly, this composition relation ignores
+{\em its} continuation, and is merely executed for its side effect.
+This is the future we want to pass to the first relation.  
+We can generalize this to any number of arguments.  For example the {\em and} 
+of three arguments should return the value produced by
+{\sf rel1([rel2([rel3([f])])])}, and so on.
+
+The composition step is performed by the datatype {\sf ComposeContinuation},
+shown in Figure~\ref{composerel}.  As in our description, when a
+composition relation is evaluated it ignores the future it is provided with
+and merely returns the first relation provided with the second relation as
+its future.  Having defined this, the {\sf and} relation is a simple recursive
+invocation.
+
+\begin{figure}
+\begin{cprog}
+class ComposeContinuation : public Continuation {
+private:
+	Expr left;
+	Expr right;
+public:
+	ComposeContinuation(Expression * a, Expression * b)
+		{ left = a; right = b; }
+	virtual void free()
+		{ left = 0; right = 0; }
+	virtual int withContinuation(Continuation *);
+};
+
+int ComposeContinuation::withContinuation(Continuation * future)
+{
+	Continuation * a = left()->isContinuation();
+	Continuation * b = right()->isContinuation();
+	if ((! a) || (! b)) {
+		error("compose with non relations??");
+		return 0;
+		}
+	return a->withContinuation(b);
+}
+
+class AndContinuation : public Continuation {
+private:
+	List relArgs;
+public:
+	AndContinuation(ListNode * args)
+		{ relArgs = args; }
+	virtual void free()
+		{ relArgs = 0; }
+	virtual int withContinuation(Continuation *);
+};
+
+int AndContinuation::withContinuation(Continuation * future)
+{
+	ListNode * args;
+	args = relArgs;
+	Continuation * newrel = future;
+	for (int i = args->length()-1; i >= 0; i--) 
+		newrel = new ComposeContinuation(args->at(i), newrel);
+
+	Expr p = newrel;	// for gc purposes
+	int result = newrel->withContinuation(nothing);
+	p = 0;
+	return result;
+}
+\end{cprog}
+\caption{The and relation}\label{composerel}
+\end{figure}
+
+You may have noticed that the class {\sf Continuation} is not a subclass of
+class {\sf Function}, and yet we have been discussing continuations as if
+they were functions.  This is easily explained.  Recall that evaluating a
+relation in our approach is a two-step process.  First the relation is
+constructed, and in the second step the future is brought to life.
+The functional parts of each of the four relation-building operations
+are concerned only with the first part of this task.   These are all
+trivial functions, shown in Figure~\ref{relbuild}.
+
+\begin{figure}
+\begin{cprog}
+class UnifyOperation : public BinaryFunction {
+public:
+	virtual void applyWithArgs(Expr & target, ListNode * args, 
+		Environment *)
+		{ target = new UnifyContinuation(args->at(0), args->at(1)); }
+
+};
+
+class PrintOperation : public UnaryFunction {
+public:
+	virtual void applyWithArgs(Expr & target, ListNode * args, 
+		Environment *)
+		{ target = new PrintContinuation(args->at(0)); }
+};
+
+class AndOperation : public Function {
+public:
+	virtual void applyWithArgs(Expr & target, ListNode * args, 
+		Environment *)
+		{ target = new AndContinuation(args); }
+};
+
+class OrOperation : public Function {
+public:
+	virtual void applyWithArgs(Expr & target, ListNode * args, 
+		Environment *)
+		{ target = new OrContinuation(args); }
+};
+\end{cprog}
+\caption{Building the Relations}\label{relbuild}
+\end{figure}
+
+The {\sf query} statement is responsible for the construction and execution
+of the continuation corresponding to its argument.  The function
+implementing the {\sf query} statement is shown in Figure~\ref{query}.
+A new environment is created prior to evaluating the arguments so that
+bindings created for new variables do not get entered into the global
+environment.  Then the continuation is constructed, simply by evaluating
+the argument.  If this process is successful, the continuation is then
+executed, and if the continuation is successful the symbol {\sf ok} is
+yielded as the result (and thus printed by the read-eval-print loop).
+If the continuation is not successful the symbol {\sf not-ok} is generated.
+
+\begin{figure}
+\begin{cprog}
+void QueryStatement::apply(Expr&target, ListNode*args, Environment*rho)
+{
+	if (args->length() != 1) {
+		target = error("wrong number of args to query");
+		return;
+		}
+
+	// we make a new environment to isolate any new variables defined
+	Env newrho = new Environment(emptyList, emptyList, rho);
+
+	args->at(0)->eval(target, valueOps, newrho);
+
+	Continuation * f = 0;
+	if (target())
+		f = target()->isContinuation();
+	if (! f) {
+		target = error("query given non-relation");
+		return;
+		}
+	if (f->withContinuation(nothing))
+		target = new Symbol("ok");
+	else
+		target = new Symbol("not ok");
+
+	newrho = 0;	// force memory management
+}
+\end{cprog}
+\caption{Implementation of the query statement}\label{query}
+\end{figure}
+
+The initialization function for the prolog interpreter 
+(Figure~\ref{prologinit}) is one of the shortest we have seen.
+It is only necessary to create the two commands {\sf define} and {\sf query}, 
+and the four relational-building operations.
+
+\begin{figure}
+\begin{cprog}
+initialize()
+{
+	// create the reader/parser 
+	reader = new PrologReader;
+
+	// make the empty relation
+	nothing = new Continuation;
+
+	// make the operators that are legal inside of relations
+	Environment * rops = valueOps;
+	rops->add(new Symbol("print"), new PrintOperation);
+	rops->add(new Symbol(":=:"), new UnifyOperation);
+	rops->add(new Symbol("and"), new AndOperation);
+	rops->add(new Symbol("or"), new OrOperation);
+
+	// initialize the commands environment
+	Environment * cmds = commands;
+	cmds->add(new Symbol("define"), new DefineStatement);
+	cmds->add(new Symbol("query"), new QueryStatement);
+}
+\end{cprog}
+\caption{Initialization of the Prolog interpreter}\label{prologinit}
+\end{figure}

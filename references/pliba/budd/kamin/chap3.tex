@@ -1,0 +1,659 @@
+\chapter{The APL Interpreter}
+
+My version of the APL interpreter differs somewhat from that provided by
+Kamin:
+\begin{itemize}
+\item
+My version will recognize arbitrary rank (dimension) arrays, not simply
+scalar, vector and two dimensional arrays.  (Although currently it is only
+able to print those three types).
+\item
+The C++ version of the interpreter recognizes vector constants without 
+the necessity for quoting them, as in (resize (3 4) (indx 12)).
+\item
+I have eliminated the if and while statements, thus forcing programmers
+into a more ``APL'' style of thought.
+\item
+My version of catenation works now for values of arbitrary dimensionality.
+(Transpose and print are the only two functions that limit the
+dimensionality of their arguments).
+\end{itemize}
+
+Despite the APL interpreter being larger than any other interpreter, I
+think that the addition of a few more functions could give the student
+an even better feel for the language, as well as providing a smooth
+transition to functional programming.  Specifically, I think reduction
+should be defined as a functional, and inner and outer products added as
+operations.  I have not done this as yet, however.
+
+Figure~\ref{aplhier} shows the class hierarchy for the classes introducted
+in this chapter.
+
+\setlength{\unitlength}{5mm}
+\begin{figure}
+\begin{picture}(25,10)(-4,-5)
+\put(-3.5,0){\sf Expression}
+\put(0,0.2){\line(1,0){1}}
+\put(1,0){\sf Function}
+\put(0,0.2){\line(1,-2){1}}
+\put(1,-2){\sf APLValue}
+\put(4,0.2){\line(1,-2){1}}
+\put(5,-2){\sf BinaryFunction}
+\put(9.5,-1.8){\line(1,0){1}}
+\put(10.5,-2){\sf APLBinaryFunction}
+\put(4,0.2){\line(1,2){1}}
+\put(5,2){\sf UnaryFunction}
+\put(9.5,2.2){\line(1,0){1}}
+\put(10.5,2){\sf APLUnaryFunction}
+\put(16,2.2){\line(1,0){1}}
+\put(17,2){\sf RavelFunction}
+\put(16,2.2){\line(1,1){1}}
+\put(17,3){\sf ShapeFunction}
+\put(16,2.2){\line(1,2){1}}
+\put(17,4){\sf APLReduction}
+\put(16,2.2){\line(1,-1){1}}
+\put(17,1){\sf IndexFunction}
+\put(16,2.2){\line(1,3){1}}
+\put(17,5){\sf TransposeFunction}
+\put(16,-1.8){\line(1,0){1}}
+\put(17,-2){\sf RestructFunction}
+\put(16,-1.8){\line(1,1){1}}
+\put(17,-1){\sf CompressFunction}
+\put(16,-1.8){\line(1,-1){1}}
+\put(17,-3){\sf APLScalarFunction}
+\put(16,-1.8){\line(1,-2){1}}
+\put(17,-4){\sf CatenationFunction}
+\put(16,-1.8){\line(1,-3){1}}
+\put(17,-5){\sf SubscriptionFunction}
+\end{picture}
+\caption{The APL interpreter class hierarchy}\label{aplhier}
+\end{figure}
+
+\section{APL Values}
+
+The APL interpreter manipulates APL values, which are defined by the data
+type {\sf APLValue} (Figure~\ref{aplvalue}).  An APL value represents a
+integer rectilinear array.  Internally, such a value is represented by a
+list that maintains the shape (extent along each dimension) and a vector of
+integer values.  The length of the shape list provides the rank
+(dimensionality) of the data value.  The product of the values in the shape
+indicates the number of elements in the array, except in the case of scalar
+values, which have an empty shape array.
+
+\begin{figure}
+\begin{cprog}
+class APLValue : public Expression {
+private:
+	List shapedata;
+	int * data;
+public:
+	APLValue(ListNode *, int);
+
+	// the overridden methods
+	virtual APLValue * isAPLValue();
+	virtual void free();
+	virtual void print();
+
+	// methods unique to apl values
+	int size();
+	ListNode * shape();
+	int shapeAt(int);
+	int at(int pos);
+	void atPut(int pos, int val);
+};
+\end{cprog}
+\caption{The Representation for APL Values}\label{aplvalue}
+\end{figure}
+
+APL values are stored in what is called {\em ravel-order}.  This is what in
+some other languages is called row-major order.
+
+The methods defined for APL values can be used to determine the number of
+elements contained in the structure ({\sf size}), obtain the shape of the
+value ({\sf shape}), obtain the shape at any given dimension 
+({\sf shapeAt}), obtain the value at any given ravel-order position 
+({\sf at}), and finally change the value at any position ({\sf atPut}).
+
+\section{The APL Reader}
+
+The APL reader is modified so that individual scalar values and vectors of
+integers are recognized as APL values.
+The class definition for {\sf APLreader} is shown in
+Figure~\ref{aplreader}, and the code for the two auxiliary functions in the
+next figure.
+
+\begin{figure}
+\begin{cprog}
+class APLreader : public LispReader {
+protected:
+	virtual Expression * readExpression();
+private:
+	APLValue * readAPLscalar(int);
+	APLValue * readAPLvector(int);
+};
+
+Expression * APLreader::readExpression()
+{
+	// see if it is a scalar value
+	if ((*p == '-') && isdigit(*(p+1))) {
+		p++;
+		return readAPLscalar( - readInteger());
+		}
+
+	if (isdigit(*p))
+		return readAPLscalar(readInteger());
+
+	// see if it is a vector constant
+	if (*p == '(') {
+		p++; 
+		skipNewlines();
+		if (isdigit(*p))
+			return readAPLvector(0);
+		return readList();
+		}
+
+	// else default
+	return LispReader::readExpression();
+}
+\end{cprog}
+\caption{The APL reader}\label{aplreader}
+\end{figure}
+
+\begin{figure}
+\begin{cprog}
+APLValue * APLreader::readAPLscalar(int d)
+{
+	// read a scalar value, but make it an APL value
+	APLValue * newval = new APLValue(emptyList, 1);
+	newval->atPut(0, d);
+	return newval;
+}
+
+APLValue * APLreader::readAPLvector(int size)
+{
+	skipNewlines();
+
+	// if at end of list, make new vector
+	if (*p == ')') {
+		p++;
+		return new APLValue(
+			new ListNode(new IntegerExpression(size), emptyList()),
+			size);
+		}
+
+	// else we better have a digit, save it and get the rest
+	int sign = 1;
+	if (*p == '-') { sign = -1; p++; }
+	if (! isdigit(*p))
+		error("ill formed apl vector constant");
+	int val = sign * readInteger();
+	APLValue * newval = readAPLvector(size + 1);
+	newval->atPut(size, val);
+	return newval;
+}
+\end{cprog}
+\caption{The APL reader functions}\label{readvector}
+\end{figure}
+
+\section{APL Functions}
+
+The implementation of the APL functions is simplified by the addition of
+two auxiliary classes, {\sf APLUnary} and {\sf APLBinary}.   In addition
+to checking that the right number of arguments are provided to a function
+application, these check to insure that the arguments are APL
+values\footnote{A largely gratuitous move, since the user has no way of
+creating anything other than an APL value.  Still, it doesn't do any harm
+to be careful.} and invoke yet another virtual function {\sf applyOp}, to
+perform the actual calculation.
+
+\subsection{Scalar Functions}
+
+By far the largest class of APL functions are the so-called {\em scalar
+functions}.  These are the conventional arithmetic and logical functions,
+such as addition and multiplication, extended in the natural way to arrays.
+The only complication in the implementation of these values concerns what
+is called {\em scalar extension}.  That is, a scalar value can be used as
+either the left or right argument to a scalar function, and it is treated
+as if it were an entire array of the correct dimensionality to match the
+other argument.  Since scalar extension can occur with either the left or
+right argument, the code for scalar functions divides naturally into three
+cases.
+
+Scalar functions are implemented using a single class by making use, as we
+have done before, of an instance variable that contains a pointer to 
+a integer function that generates an integer result.  The class {\sf
+APLscalarFunction} and the method {\sf applyOp} are shown in
+Figure~\ref{aplscalar}.  Note that the same functions used in the previous
+interpreters can be used in the construction of the APL scalar functions.
+
+\begin{figure}
+\begin{cprog}
+void APLScalarFunction::applyOp(Expr& target, APLValue* left, APLValue* right)
+{
+	if (left->size() == 1) {	// scalar extension of left
+		int extent = right->size();
+		APLValue * newval = new APLValue(right->shape(), extent);
+		int lvalue = left->at(0);
+		while (--extent >= 0)
+			newval->atPut(extent, fun(lvalue, right->at(extent)));
+		target = newval;
+		}
+	else if (right->size() == 1) {	// scalar extension of right
+		int extent = left->size();
+		APLValue * newval = new APLValue(left->shape(), extent);
+		int rvalue = right->at(0);
+		while (--extent >= 0)
+			newval->atPut(extent, fun(left->at(extent), rvalue));
+		target = newval;
+		}
+	else {				// conforming arrays
+		int extent = left->size();
+		if (extent != right->size()) {
+			target = error("conformance error on scalar function");
+			return;
+			}
+		for (int i = left->shape()->length(); --i >= 0; ) 
+			if (left->shapeAt(i) != right->shapeAt(i)) {
+				target = 
+				error("conformance error on scalar function");
+				return;
+				}
+
+		APLValue * newval = new APLValue(left->shape(), extent);
+		while (--extent >= 0)
+			newval->atPut(extent, 
+				fun(left->at(extent), right->at(extent)));
+		target = newval;
+		}
+}
+\end{cprog}
+\caption{APL Scalar Functions}\label{aplscalar}
+\end{figure}
+
+\subsection{Reduction}
+
+For each scalar function there is an associated reduction
+function.\footnote{The statement is true of real APL.  The Kamin
+interpreters do not implement reductions with relational operators, which
+are, however, not particularly useful.}  Reduction in these interpreters always
+occurs along the last dimension.  Thus to compute the size of a new value
+is suffices to remove the last dimension value.  This also simplifies the
+generation of the new values, since the argument array can be processed in
+units as long as the final dimension.  As with the scalar functions,
+there is one class defined for all the reductions, with each instance of
+this class maintaining the particular scalar function being used for the
+reduction operations.  Figure~\ref{reduction} shows the code used in
+computing the APL reduction function.
+
+\begin{figure}
+\begin{cprog}
+static int lastSize(ListNode * sz)
+{
+	int i = sz->length();
+	if (i > 0) {
+		IntegerExpression * ie = sz->at(i-1)->isInteger();
+		if (ie)
+			return ie->val();
+		}
+	return 1;
+}
+
+static ListNode * removeLast(ListNode * sz)
+{
+	ListNode * newsz = emptyList;
+	int i = sz->length()-1;
+	while (--i >= 0)
+		newsz = new ListNode(sz->at(i), newsz);
+	return newsz;
+}
+
+void APLReduction::applyOp(Expr & target, APLValue * arg)
+{
+	// compute the size of the new expression
+	int rowextent = lastSize(arg->shape());
+	int extent = arg->size() / rowextent;
+	APLValue * newval = new APLValue(removeLast(arg->shape()), extent);
+
+	while (--extent >= 0) {
+		int start = (extent + 1) * rowextent - 1;
+		int newint = arg->at(start);
+		for (int i = rowextent - 2; i >= 0; i--)
+			newint = fun(arg->at(--start), newint);
+		newval->atPut(extent, newint);
+		}
+
+	target = newval;
+}
+\end{cprog}
+\caption{Implementation of the APL reduction function}\label{reduction}
+\end{figure}
+
+\subsection{Compression}
+
+Compression, like reduction, operates on the last dimension of a higher
+order array, changing its extent to that of the number of one elements in
+the left-argument vector.  The length of the left argument vector must
+match the extent of the last dimension of the right argument.
+The compression function (Figure~\ref{compress}) first computes the number
+of one elements in the left argument, then iterates over the right argument
+generating the new values.
+
+\begin{figure}
+\begin{cprog}
+static ListNode * replaceLast(ListNode * sz, int i)
+{
+	ListNode *nz = new ListNode(new IntegerExpression(i), emptyList());
+	for (i = sz->length() - 1; --i >= 0; )
+		nz = new ListNode(sz->at(i), nz);
+	return nz;
+}
+
+void CompressionFunction::applyOp(Expr& target, APLValue* left, APLValue* right)
+{
+	if (left->shape()->length() >= 2) {
+		target = error("compression requires vector left arg");
+		return;
+		}
+	int lsize = left->size();	// works for both scalar and vec
+	int rsize = lastSize(right->shape());
+	if (lsize != rsize) {
+		target = error("compression conformability error");
+		return;
+		}
+	// compute the number of non-zero values
+	int i, nsize;
+	nsize = 0;
+	for (i = 0; i < lsize; i++)
+		if (left->at(i)) nsize++;
+	
+	// now compute the new size
+	int rextent = right->size();
+	int extent = (rextent / lsize) * nsize;
+
+	APLValue * newval = new APLValue(replaceLast(right->shape(), nsize),
+				extent);
+
+	// now fill in the values
+	int index = 0;
+	for (i = 0; i <= rextent; i++)
+		if (left->at(i % lsize))
+			newval->atPut(index++, right->at(i));
+	target = newval;
+}
+\end{cprog}
+\caption{The Compression function}\label{compress}
+\end{figure}
+
+\subsection{Shape and Reshape}
+
+The {\sf shape} function merely copies the size on its argument into a new
+APL value.  The reshape function ({\sf restruct}) generates a new value
+with a size given by the left argument, which must be a vector, using
+elements from the right argument, recycling over the ravel ordering of the
+right argument multiple times if necessary.  The implementation of these
+functions is shown in Figure~\ref{shape}.
+
+\begin{figure}
+\begin{cprog}
+void ShapeFunction::applyOp(Expr & target, APLValue * arg)
+{
+	int extent = arg->shape()->length();
+	ListNode * newshape = new ListNode(new IntegerExpression(extent),
+			emptyList());
+	APLValue * newval = new APLValue(newshape, extent);
+	while (--extent >= 0) {
+		IntegerExpression * ie = arg->shape()->at(extent)->isInteger();
+		if (ie)
+			newval->atPut(extent, ie->val());
+		else
+			target = error("impossible case in Shapefunction");
+		}
+	target = newval;
+};
+
+void RestructFunction::applyOp(Expr & target, APLValue * left, APLValue * right)
+{
+	int llen = left->shape()->length();
+	if (llen >= 2) {
+		target = error("restruct requires vector left arg");
+		return;
+		}
+	llen = left->size();	// works for either scalar or vector
+	int extent = 1;
+	ListNode * newShape = emptyList;
+	while (--llen >= 0) {
+		newShape = new ListNode(new IntegerExpression(left->at(llen)),
+			newShape);
+		extent *= left->at(llen);
+		}
+	APLValue * newval = new APLValue(newShape, extent);
+	int rsize = right->size();
+	while (--extent >= 0)
+		newval->atPut(extent, right->at(extent % rsize));
+	target = newval;
+}
+\end{cprog}
+\caption{The shape and reshape functions}\label{shape}
+\end{figure}
+
+\subsection{Ravel and Index}
+
+The ravel function (Figure~\ref{ravel}) merely takes an argument of
+arbitrary dimensionality and returns the values as a vector.  The index
+function (called iota in real APL) takes a scalar value and returns a
+vector of numbers from 1 to the argument value.
+
+\begin{figure}
+\begin{cprog}
+void RavelFunction::applyOp(Expr & target, APLValue * arg)
+{
+	int extent = arg->size();
+	APLValue * newval = new APLValue(extent);
+	while (--extent >= 0) 
+		newval->atPut(extent, arg->at(extent));
+	target = newval;
+}
+
+void IndexFunction::applyOp(Expr & target, APLValue * arg)
+{
+	if (arg->size() != 1) {
+		target = error("index function requires scalar argument");
+		return;
+		}
+	int extent = arg->at(0);
+	APLValue * newval = new APLValue(extent);
+	while (--extent >= 0)
+		newval->atPut(extent, extent + 1);
+	target = newval;
+}
+\end{cprog}
+\caption{Ravel and Index}\label{ravel}
+\end{figure}
+
+\subsection{Catenation}
+
+The catenation function joins two arrays along their last dimension.
+They must match in all other dimensions.  To build the new result first a
+row from the first array is copies into the final array, then a row from
+the second array, then another row from the first, followed by another row
+from the second, and so on until all rows from each argument have been
+used.
+
+\begin{figure}
+\begin{cprog}
+void CatenationFunction::applyOp(Expr& target, APLValue* left, APLValue* right)
+{
+	ListNode * lshape = left->shape();
+	ListNode * rshape = right->shape();
+	int llen = lshape->length();
+	int rlen = rshape->length();
+	if (llen <= 0 || (llen != rlen)) {
+		target = error("catenation conformability error");
+		return;
+		}
+
+	// get the size of the last row in each structure
+	int lrow, rrow;
+	IntegerExpression * ie = lshape->at(llen-1)->isInteger();
+	if (ie)
+		lrow = ie->val();
+	else
+		lrow = 1;
+	ie = rshape->at(rlen-1)->isInteger();
+	if (ie)
+		rrow = ie->val();
+	else
+		rrow = 1;
+
+	// build up the new size
+	int extent = lrow + rrow;
+	ListNode * newShape = new ListNode(
+		new IntegerExpression(extent), emptyList());
+	llen = llen - 1;
+	while (--llen >= 0) {
+		newShape = new ListNode(lshape->at(llen), newShape);
+		ie = lshape->at(llen)->isInteger();
+		if (ie)
+			extent *= ie->val();
+		}
+
+	APLValue * newval = new APLValue(newShape, extent);
+
+	// now build the new values
+	int i, index, lindex, rindex;
+	index = lindex = rindex = 0;
+	while (index < extent) {
+		for (i = 0; i < lrow; i++)
+			newval->atPut(index++, left->at(lindex++));
+		for (i = 0; i < rrow; i++)
+			newval->atPut(index++, right->at(rindex++));
+		}
+
+	target = newval;
+}
+\end{cprog}
+\caption{Implementation of the Catenation function}\label{catenation}
+\end{figure}
+
+\subsection{Transpose}
+
+While real APL defines transpose for arbitrary dimension arrays, the
+transpose presented here works only for arrays of dimension two or less.
+For vector and scalars the transpose does nothing.  Thus the only code
+required (Figure~\ref{transpose}) is to take the transpose of a two
+dimensional array.
+
+\begin{figure}
+\begin{cprog}
+void TransposeFunction::applyOp(Expr& target, APLValue * arg)
+{
+	// transpose of vectors or scalars does nothings
+	if (arg->shape()->length() != 2) {
+		target = arg;
+		return;
+		}
+
+	// get the two extents
+	int lim1 = arg->shapeAt(0);
+	int lim2 = arg->shapeAt(1);
+
+	// build new shapes
+	ListNode * newShape =
+		new ListNode(arg->shape()->at(1),
+		new ListNode(arg->shape()->at(0), emptyList()));
+	APLValue * newval = new APLValue(newShape, lim1 * lim2);
+
+	// now compute the values
+	for (int i = 0; i < lim2; i++)
+		for (int j = 0; j < lim2; j++)
+			newval->atPut(i * lim1 + j,
+				arg->at(j * lim2 + i));
+
+	target = newval;
+}
+\end{cprog}
+\caption{The Transpose Function}\label{transpose}
+\end{figure}
+
+\subsection{Subscription}
+
+The Pascal interpreter provided by Kamin applies subscription to the first
+dimension of a multidimension value.  In order to be consistent with the
+other functions, my version does subscription along the last dimension.
+Neither is exactly the same as the real APL version.  The subscription code
+is shown in Figure~\ref{subscript}.
+
+\begin{figure}
+\begin{cprog}
+void SubscriptFunction::applyOp(Expr& target, APLValue *left, APLValue *right)
+{
+	if (right->shape()->length() >= 2) {
+		target = error("subscript requires vector second arg");
+		return;
+		}
+	int rsize = right->size();
+	int lsize = lastSize(left->shape());
+	int extent = (left->size() / lsize) * rsize;
+
+	APLValue * newval = new APLValue(replaceLast(left->shape(), rsize),
+		extent);
+
+	for (int i = 0; i < extent; i++)
+		newval->atPut(i, left->at(
+			(i / rsize) * lsize + (right->at(i % rsize)-1)));
+	target = newval;
+}
+\end{cprog}
+\caption{The Subscription function}\label{subscript}
+\end{figure}
+
+\section{Initialization of the APL interpreter}
+
+The initialization code for the APL interpreter is shown in
+Figure~\ref{chap3init}.
+
+\begin{figure}
+\begin{cprog}
+initialize()
+{
+
+	// initialize global variables
+	reader = new APLreader;
+
+	// initialize the statement environment
+	Environment * cmds = commands;
+	cmds->add(new Symbol("define"), new DefineStatement);
+
+	// initialize the value ops environment
+	Environment * vo = valueOps;
+	vo->add(new Symbol("set"), new SetStatement);
+	vo->add(new Symbol("+"), new APLScalarFunction(PlusFunction));
+	vo->add(new Symbol("-"), new APLScalarFunction(MinusFunction));
+	vo->add(new Symbol("*"), new APLScalarFunction(TimesFunction));
+	vo->add(new Symbol("/"), new APLScalarFunction(DivideFunction));
+	vo->add(new Symbol("max"), new APLScalarFunction(scalarMax));
+	vo->add(new Symbol("or"), new APLScalarFunction(scalarOr));
+	vo->add(new Symbol("and"), new APLScalarFunction(scalarAnd));
+	vo->add(new Symbol("="), new APLScalarFunction(scalarEq));
+	vo->add(new Symbol("<"), new APLScalarFunction(LessThanFunction));
+	vo->add(new Symbol(">"), new APLScalarFunction(GreaterThanFunction));
+	vo->add(new Symbol("+/"), new APLReduction(PlusFunction));
+	vo->add(new Symbol("-/"), new APLReduction(MinusFunction));
+	vo->add(new Symbol("*/"), new APLReduction(TimesFunction));
+	vo->add(new Symbol("//"), new APLReduction(DivideFunction));
+	vo->add(new Symbol("max/"), new APLReduction(scalarMax));
+	vo->add(new Symbol("or/"), new APLReduction(scalarOr));
+	vo->add(new Symbol("and/"), new APLReduction(scalarAnd));
+	vo->add(new Symbol("compress"), new CompressionFunction);
+	vo->add(new Symbol("shape"), new ShapeFunction);
+	vo->add(new Symbol("ravel"), new RavelFunction);
+	vo->add(new Symbol("restruct"), new RestructFunction);
+	vo->add(new Symbol("cat"), new CatenationFunction);
+	vo->add(new Symbol("indx"), new IndexFunction);
+	vo->add(new Symbol("trans"), new TransposeFunction);
+	vo->add(new Symbol("[]"), new SubscriptFunction);
+	vo->add(new Symbol("print"), new UnaryFunction(PrintFunction));
+}
+\end{cprog}
+\caption{APL interpreter initialization}\label{chap3init}
+\end{figure}

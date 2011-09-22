@@ -1,0 +1,43 @@
+Topic:        lang/lisp/impl/kamin/
+
+Summary:      C and C++ Implementations of the Kamin Interpreters
+
+Description:
+
+   This directory contains the source code for the interpreters from
+   Sam Kamin's book,
+      Samuel Kamin, "Programming Languages, An Interpreter-Based Approach", 
+      Addison-Wesley, Reading, Mass., 1990. ISBN 0-201-06824-9.
+   as well as Tim Budd's re-implementation in C++. The book discusses
+   interpreters for Pascal, Lisp, APL, Scheme, SASL, CLU, Smalltalk
+   and Prolog. The implementations center around a common core that
+   remains unchanged from language to language. 
+   
+   Tim Budd's implementation represents a complete rewrite,
+   not a translation of Kamin's Pascal versions.
+
+Updated:      Wed Oct 12 22:30:21 1994
+
+CD-ROM:       Prime Time Freeware for AI, Issue 1-1
+
+Keywords:
+
+   Authors!Budd, Authors!Kamin, C++!Code, Interpreters!Lisp, 
+   Interpreters!Prolog, Interpreters!Scheme, Interpreters!Smalltalk, 
+   Lisp!Implementations, Programming Languages!Lisp, 
+   Programming Languages!Prolog, Programming Languages!Scheme, 
+   Programming Languages!Smalltalk, Prolog!Implementations, 
+   Scheme!Implementations, Smalltalk!Implementations
+
+Contains:
+
+   budd/      Kamin: Tim Budd's C++ Implementation of the Kamin Interpreters
+   kamin/     Kamin: Source for the interpreter's in Sam Kamin's book
+
+See Also:     ?
+
+References:
+
+   Samuel Kamin, "Programming Languages, An Interpreter-Based Approach",
+   Addison-Wesley, Reading, MA, 1990. ISBN 0-201-06824-9.
+

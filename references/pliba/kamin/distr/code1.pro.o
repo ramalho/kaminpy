@@ -1,0 +1,204 @@
+-> -> 
+-> 
+-> 
+-> 
+-> 
+-> 
+-> -> > > > 
+-> 
+Satisfied
+
+-> 
+
+Satisfied
+
+-> 
+yellow blue red blue yellow blue
+Satisfied
+
+-> 
+yellow blue red blue yellow blue
+Satisfied
+
+-> -> 
+-> 
+-> 
+Satisfied
+
+-> 
+
+Satisfied
+
+-> 
+Not satisfied
+
+-> 
+Not satisfied
+
+-> -> 
+-> 
+-> 
+-> 
+-> 
+Satisfied
+
+-> 
+
+Satisfied
+
+-> 
+-> 
+-> 
+-> 
+Satisfied
+
+-> 
+
+Satisfied
+
+-> 
+-> 
+-> -> 
+-> 
+-> 
+(cons 3 (cons 4 nil))
+Satisfied
+
+-> 
+(cons 3 (cons 4 nil))
+Satisfied
+
+-> 
+(cons 3 nil)
+Satisfied
+
+-> 
+(cons 3 nil)
+Satisfied
+
+-> -> 
+-> 
+-> 
+(cons 2 (cons 1 nil))
+Satisfied
+
+-> 
+(cons 2 (cons 1 nil))
+Satisfied
+
+-> 
+(cons 2 (cons 1 nil))
+Satisfied
+
+-> 
+(cons 2 (cons 1 nil))
+Satisfied
+
+-> -> 
+-> 
+-> 
+(cons 3 nil)
+Satisfied
+
+-> 
+(cons 3 nil)
+Satisfied
+
+-> > 
+(cons 3 (cons 4 (cons 5 (cons 6 nil))))
+Satisfied
+
+-> 
+(cons 3 (cons 4 (cons 5 (cons 6 nil))))
+Satisfied
+
+-> > 
+(cons 5 nil)
+Satisfied
+
+-> 
+(cons 5 nil)
+Satisfied
+
+-> -> 
+-> 
+-> 
+-> 
+lima
+Satisfied
+
+-> 
+lima
+Satisfied
+
+-> -> 
+-> 
+-> 
+15
+Satisfied
+
+-> 
+15
+Satisfied
+
+-> 
+-> 
+-> 
+-> 
+-> 
+-> 
+-> -> 
+-> 
+-> 
+-> -> 
+-> > 
+-> -> 
+-> 
+(cons 2 (cons 3 (cons 4 nil)))
+Satisfied
+
+-> 
+(cons 2 (cons 3 (cons 4 nil)))
+Satisfied
+
+-> -> 
+-> 
+-> 
+-> -> 
+-> > > > > > 
+-> > 
+(cons 1 (cons 2 (cons 3 (cons 7 (cons 8 nil)))))
+Satisfied
+
+-> 
+(cons 1 (cons 2 (cons 3 (cons 7 (cons 8 nil)))))
+Satisfied
+
+-> -> 
+-> 
+-> 
+(cons 3 (cons 4 nil))
+Satisfied
+
+-> 
+(cons 3 (cons 4 nil))
+Satisfied
+
+-> 
+(diff (cons 3 (cons 4 Z1)) Z1)
+Satisfied
+
+-> 
+(diff (cons 3 (cons 4 Z1)) Z1)
+Satisfied
+
+-> 
+-> > 
+(diff (cons 3 (cons 4 Y)) Y)
+Satisfied
+
+-> 
+(diff (cons 3 (cons 4 Y)) Y)
+Satisfied
+
+-> 

@@ -1,0 +1,359 @@
+-> -> +1
+-> or
+-> and
+-> not
+-> <>
+-> <=
+-> divides
+-> mod
+-> > > gcd
+-> abs
+-> -> > > > > > > > > > > > > > > > > > > > > > > > > > initFinancialHistory
+receive:from:
+spend:for:
+cashOnHand
+totalReceivedFrom:
+totalSpentFor:
+FinancialHistory
+-> > mkFinancialHistory
+-> -> > > > > > > > > > > > > > > > initDeductibleHistory
+spend:Deduct:
+spend:for:deduct:
+totalDeductions
+DeductibleHistory
+-> > mkDeductibleHistory
+-> -> -> 0
+
+-> 1
+
+-> isNil
+-> notNil
+-> > > > > > > > > > > > > > > > > > > > > > > > > first
+next
+add:
+size
+isEmpty
+includes:
+Collection
+-> > > > > > > > initSet
+first
+next
+add:
+Set
+-> mkSet
+-> -> > > > > > > > > > > > > > > > > > > > > > > > > at:put:
+currentKey
+at:
+includesKey:
+indexOf:
+KeyedCollection
+-> -> > > > > > > > initAssociation
+fst
+snd
+fst:
+snd:
+Association
+-> -> mkAssociation
+-> > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > initDictionary
+currentKey
+first
+next
+at:put:
+associationAt:
+Dictionary
+-> mkDictionary
+-> -> > > > > > > > > > > > > > > firstKey
+lastKey
+last
+at:
+SequenceableCollection
+-> > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > car
+cdr
+initList
+add:
+car:
+cdr:
+first
+next
+firstKey
+lastKey
+currentKey
+at:put:
+removeFirst
+zerolist
+List
+-> mkList
+-> -> > > > > > > > > > > > > > > > > > > > > > > > > > > initArray
+size
+firstKey
+lastKey
+currentKey
+first
+next
+at:put:
+Array
+-> mkArray
+-> -> <userval>
+
+-> 950
+
+-> 1150
+
+-> 1150
+
+-> 1150
+
+-> 1050
+
+-> 1050
+
+-> 1050
+
+-> <userval>
+
+-> 950
+
+-> 1150
+
+-> 1150
+
+-> 1150
+
+-> 0
+
+-> 0
+
+-> 100
+
+-> 1050
+
+-> 1050
+
+-> 100
+
+-> 100
+
+-> 150
+
+-> 950
+
+-> 950
+
+-> 150
+
+-> 150
+
+-> -> > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > +
+negate
+*
+recip
+=
+<
+zero
+one
+print
+-
+/
+>
++1
+sub1
+isZero
+isNegative
+abs
+sqr
+sqrt
+Number
+-> > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > initFraction
+setFraction
+x
+y
++
+negate
+*
+recip
+=
+<
+zero
+one
+print
+div-reduce
+sign-reduce
+Fraction
+-> mkFraction
+-> <userval>
+
+-> <userval>
+
+-> <userval>
+
+-> 3437249
+833049
+833049
+
+-> 3437249
+
+-> 833049
+
+-> -> > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > initFloat
+mant
+exp
++
+negate
+*
+recip
+zero
+one
+=
+<
+print
+isZero
+isNegative
+powerof10
+normalize
+Float
+-> mkFloat
+-> <userval>
+
+-> <userval>
+
+-> 4125
+-3
+-3
+
+-> 4125
+
+-> -3
+
+-> -> > > > > > > > > > > > initialize
+report
+run
+Simulation
+-> > > > > > > > > > > > > > > > > > > > > > > > > > > initLabSimulation
+initialize
+report
+LabSimulation
+-> mkLabSimulation
+-> > > > > > > > > > > > initLab
+terminals-free?
+pick-terminal
+release-terminal
+Lab
+-> mkLab
+-> -> > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > car
+cdr
+initList
+newEmptyCollection
+add:
+car:
+cdr:
+first
+next
+firstKey
+lastKey
+currentKey
+at:put:
+removeFirst
+zerolist
+List
+-> -> > > > > > > initQueue
+newEmptyCollection
+enqueue:
+Queue
+-> mkQueue
+-> > > > > > > > > > > > > initEventQueue
+scheduleEvent
+doNextEvent
+EventQueue
+-> mkEventQueue
+-> > > > > > > > > initPriorityQueue
+newEmptyCollection
+insert:
+PriorityQueue
+-> mkPriorityQueue
+-> > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > initStudent
+takeAction
+arrive
+leaveTerminal
+grabTerminal
+scheduleLeaveTerminal
+scheduleNewArrival
+Student
+-> -> > > > > > initWaitTimeList
+next
+WaitTimeList
+-> mkWaitTimeList
+-> -> > > > > initServiceTimeList
+next
+ServiceTimeList
+-> mkServiceTimeList
+-> <userval>
+
+-> simulation-done
+students-finishing
+20
+left-on-queue
+0
+Total-time-wasted:
+18900
+Average-time-wasted:
+945
+945
+
+-> simulation-done
+
+-> students-finishing
+
+-> 20
+
+-> left-on-queue
+
+-> 0
+
+-> Total-time-wasted:
+
+-> 18900
+
+-> Average-time-wasted:
+
+-> 945
+
+-> -> > > > > initWaitTimeList
+next
+WaitTimeList
+-> mkWaitTimeList
+-> -> > > > > > > > initServiceTimeList
+next
+ServiceTimeList
+-> mkServiceTimeList
+-> <userval>
+
+-> simulation-done
+students-finishing
+30
+left-on-queue
+8
+Total-time-wasted:
+3090
+Average-time-wasted:
+103
+103
+
+-> simulation-done
+
+-> students-finishing
+
+-> 30
+
+-> left-on-queue
+
+-> 8
+
+-> Total-time-wasted:
+
+-> 3090
+
+-> Average-time-wasted:
+
+-> 103
+
+-> 

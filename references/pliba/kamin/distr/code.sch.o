@@ -1,0 +1,381 @@
+-> -> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> > <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> > > > > > <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> > > > <closure>
+
+-> <closure>
+
+-> > <closure>
+
+-> > > > > <closure>
+
+-> > > > <closure>
+
+-> <closure>
+
+-> -> > <closure>
+
+-> (5 7)
+
+-> (5 7)
+
+-> > > > <closure>
+
+-> ((2 9) (4 5))
+
+-> ((2 9) (4 5))
+
+-> <closure>
+
+-> <closure>
+
+-> 5
+
+-> 5
+
+-> -> > > <closure>
+
+-> (T () () ())
+
+-> (T () () ())
+
+-> (4 5 6)
+
+-> (4 5 6)
+
+-> <closure>
+
+-> (4 5 6)
+
+-> (4 5 6)
+
+-> <closure>
+
+-> 7
+
+-> 7
+
+-> <closure>
+
+-> <closure>
+
+-> (4 5 6)
+
+-> (4 5 6)
+
+-> <closure>
+
+-> ((3 4) (5 6))
+
+-> ((3 4) (5 6))
+
+-> > > <closure>
+
+-> <closure>
+
+-> 30
+
+-> 30
+
+-> <closure>
+
+-> <closure>
+
+-> 10
+
+-> 10
+
+-> <closure>
+
+-> 24
+
+-> 24
+
+-> <closure>
+
+-> (3 4 5)
+
+-> (3 4 5)
+
+-> <closure>
+
+-> > > > <closure>
+
+-> > > > > <closure>
+
+-> <closure>
+
+-> > <closure>
+
+-> <closure>
+
+-> ((95 2170) (85 1005))
+
+-> ((95 2170) (85 1005))
+
+-> ((85 1005) (85 2170))
+
+-> ((85 1005) (85 2170))
+
+-> <closure>
+
+-> ((85 1005) (95 2170))
+
+-> ((85 1005) (95 2170))
+
+-> > <closure>
+
+-> > <closure>
+
+-> > <closure>
+
+-> <closure>
+
+-> > ((Reddy 2170 95 92) (Kaplan 1005 85 87))
+
+-> ((Reddy 2170 95 92) (Kaplan 1005 85 87))
+
+-> <closure>
+
+-> > <closure>
+
+-> > > <closure>
+
+-> <closure>
+
+-> > ((Kaplan 1005 85 87) (Reddy 2170 95 92))
+
+-> ((Kaplan 1005 85 87) (Reddy 2170 95 92))
+
+-> > > <closure>
+
+-> ()
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> (a b)
+
+-> (a b)
+
+-> T
+
+-> T
+
+-> ()
+
+-> ()
+
+-> (b c)
+
+-> (b c)
+
+-> (c a b)
+
+-> (c a b)
+
+-> > > > > <closure>
+
+-> > <closure>
+
+-> > ()
+
+-> ()
+
+-> > T
+
+-> T
+
+-> > <closure>
+
+-> > <closure>
+
+-> <closure>
+
+-> > <closure>
+
+-> > <closure>
+
+-> > > > > > > <closure>
+
+-> (() <closure> <closure>)
+
+-> ()
+
+-> <closure>
+
+-> <closure>
+
+-> > > > <closure>
+
+-> 1
+
+-> 1
+
+-> > > <closure>
+
+-> > > > <closure>
+
+-> 1
+
+-> 1
+
+-> <closure>
+
+-> > > > > <closure>
+
+-> 1
+
+-> 1
+
+-> <closure>
+
+-> > > > > > > <closure>
+
+-> 1
+
+-> 1
+
+-> <closure>
+
+-> > <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> 14
+
+-> 14
+
+-> 131
+
+-> 131
+
+-> -> -> > > > <closure>
+
+-> <closure>
+
+-> -> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> > > > > > > > > > > > <closure>
+
+-> > > > > > > > <closure>
+
+-> > > > > > > <closure>
+
+-> > > > > > > <closure>
+
+-> > > > > > > > > > <closure>
+
+-> > > > > > > > > > > > <closure>
+
+-> > <closure>
+
+-> <closure>
+
+-> > > <closure>
+
+-> > <closure>
+
+-> > > > > > <closure>
+
+-> > <closure>
+
+-> > > > > > > (((Dx x) 1) ((Dx c) 0) ((Dx (+ X Y)) (+ (Dx X) (Dx Y))) ((Dx (- X Y)) (- (Dx X) (Dx Y))) ((Dx (* X Y)) (+ (* Y (Dx X)) (* X (Dx Y)))) ((Dx (/ X Y)) (/ (- (* Y (Dx X)) (* X (Dx Y))) (* Y Y))))
+
+-> <closure>
+
+-> -> -> -> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> > > > > > > > > > <closure>
+
+-> > > > <closure>
+
+-> > > > <closure>
+
+-> > > <closure>
+
+-> > > > <closure>
+
+-> <closure>
+
+-> <closure>
+
+-> > > > > > > > > > > > > > > > > ((+ (primop +)) (- (primop -)) (cons (primop cons)) (* (primop *)) (/ (primop /)) (< (primop <)) (> (primop >)) (= (primop =)) (cdr (primop cdr)) (car (primop car)) (number? (primop number?)) (list? (primop list?)) (symbol? (primop symbol?)) (null? (primop null?)) (closure? (primop closure?)) (primop? (primop primop?)))
+
+-> > > > > > > > > <closure>
+
+-> > > > > > > > > <closure>
+
+-> ((+ (primop +)) (- (primop -)) (cons (primop cons)) (* (primop *)) (/ (primop /)) (< (primop <)) (> (primop >)) (= (primop =)) (cdr (primop cdr)) (car (primop car)) (number? (primop number?)) (list? (primop list?)) (symbol? (primop symbol?)) (null? (primop null?)) (closure? (primop closure?)) (primop? (primop primop?)) (double (closure (lambda (a) (+ a a)) ((+ (primop +)) (- (primop -)) (cons (primop cons)) (* (primop *)) (/ (primop /)) (< (primop <)) (> (primop >)) (= (primop =)) (cdr (primop cdr)) (car (primop car)) (number? (primop number?)) (list? (primop list?)) (symbol? (primop symbol?)) (null? (primop null?)) (closure? (primop closure?)) (primop? (primop primop?))))))
+
+-> > ((+ (primop +)) (- (primop -)) ... (double (closure (lambda (a) (+ a a)) ...)))
+
+-> 8
+
+-> 8
+
+-> -> > > > > > > > > > <closure>
+
+-> > > > <closure>
+
+-> > > <closure>
+
+-> <closure>
+
+-> ((+ (primop +)) (- (primop -)) (cons (primop cons)) (* (primop *)) (/ (primop /)) (< (primop <)) (> (primop >)) (= (primop =)) (cdr (primop cdr)) (car (primop car)) (number? (primop number?)) (list? (primop list?)) (symbol? (primop symbol?)) (null? (primop null?)) (closure? (primop closure?)) (primop? (primop primop?)) (s 10))
+
+-> ((+ (primop +)) (- (primop -)) (cons (primop cons)) (* (primop *)) (/ (primop /)) (< (primop <)) (> (primop >)) (= (primop =)) (cdr (primop cdr)) (car (primop car)) (number? (primop number?)) (list? (primop list?)) (symbol? (primop symbol?)) (null? (primop null?)) (closure? (primop closure?)) (primop? (primop primop?)) (s 10) (f (lambda (x) (+ x s))))
+
+-> ((+ (primop +)) (- (primop -)) (cons (primop cons)) (* (primop *)) (/ (primop /)) (< (primop <)) (> (primop >)) (= (primop =)) (cdr (primop cdr)) (car (primop car)) (number? (primop number?)) (list? (primop list?)) (symbol? (primop symbol?)) (null? (primop null?)) (closure? (primop closure?)) (primop? (primop primop?)) (s 10) (f (lambda (x) (+ x s))) (g (lambda (s) (f (+ s 11)))))
+
+-> 21
+
+-> 21
+
+-> > ((+ (primop +)) (- (primop -)) (cons (primop cons)) (* (primop *)) (/ (primop /)) (< (primop <)) (> (primop >)) (= (primop =)) (cdr (primop cdr)) (car (primop car)) (number? (primop number?)) (list? (primop list?)) (symbol? (primop symbol?)) (null? (primop null?)) (closure? (primop closure?)) (primop? (primop primop?)) (s 10) (f (lambda (x) (+ x s))) (g (lambda (s) (f (+ s 11)))) (add (lambda (x) (lambda (y) (+ x y)))))
+
+-> ((+ (primop +)) (- (primop -)) (cons (primop cons)) (* (primop *)) (/ (primop /)) (< (primop <)) (> (primop >)) (= (primop =)) (cdr (primop cdr)) (car (primop car)) (number? (primop number?)) (list? (primop list?)) (symbol? (primop symbol?)) (null? (primop null?)) (closure? (primop closure?)) (primop? (primop primop?)) (s 10) (f (lambda (x) (+ x s))) (g (lambda (s) (f (+ s 11)))) (add (lambda (x) (lambda (y) (+ x y)))) (add1 (lambda (y) (+ x y))))
+
+-> ((+ (primop +)) (- (primop -)) (cons (primop cons)) (* (primop *)) (/ (primop /)) (< (primop <)) (> (primop >)) (= (primop =)) (cdr (primop cdr)) (car (primop car)) (number? (primop number?)) (list? (primop list?)) (symbol? (primop symbol?)) (null? (primop null?)) (closure? (primop closure?)) (primop? (primop primop?)) (s 10) (f (lambda (x) (add1 x))) (g (lambda (s) (f (+ s 11)))) (add (lambda (x) (lambda (y) (+ x y)))) (add1 (lambda (y) (+ x y))))
+
+-> 10
+
+-> 10
+
+-> 

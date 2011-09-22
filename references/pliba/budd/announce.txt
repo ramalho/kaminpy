@@ -1,0 +1,40 @@
+From: budd@fog.cs.orst.edu (Tim Budd)
+Newsgroups: comp.archives
+Subject: [comp.lang.misc] Kamin interpreters
+Date: 12 Sep 91 17:58:42 GMT
+Followup-To: comp.lang.misc,comp.lang.c++,comp.object
+Organization: Computer Science Department, Oregon State Univ.
+
+Archive-name: auto/comp.lang.misc/Kamin-interpreters
+Original-posting-by: budd@fog.cs.orst.edu (Tim Budd)
+Original-subject: Kamin interpreters
+Reposted-by: adam@soda.berkeley.edu
+
+This note is for people who have studied programming languages from Samuel
+Kamin's book ``Programming Languages, An Interpreter-Based Approach'' (a
+very good book, by the way).
+
+I've rewritten the interpreters in C++ for the languages Kamin discusses
+(Pascal, Lisp, APL, Scheme, SASL, CLU, Smalltalk and Prolog).
+This is a complete rewrite, not a translation of his Pascal versions.
+The basic idea is that there is a base set of class descriptions that
+remain unchanged through each of the eight different languages.  All
+specialization is accomplished only by modifying the classes using
+subclassing.  It is my conjecture that this makes the differences between
+the different interpreters easier to understand.  Any feedback on the
+validity of that conjecture would be appreciated.  A short (100 page)
+report accompanies the sources to describe my version of the interpreters.
+
+The software is very new, and accordingly likely buggy.  It compiles under
+GNU G++ 1.39, which is the only system I have right at the moment.  I don't
+do anything out of the ordinary, however, so I don't expect other compilers
+to complain.
+
+Anyway, to obtain the sources use anonymous ftp from cs.orst.edu, directory
+pub/budd/kamin.  There are six shar files there containing the sources and
+the document.  No, I won't distribute the sources in other formats unless
+accompanied by large bribes.
+--tim budd
+
+
+

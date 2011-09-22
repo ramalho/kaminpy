@@ -1,0 +1,56 @@
+3
+3
+(+ 4 7)
+11
+(set x 4)
+4
+(+ x x)
+8
+(print x)
+  4
+4
+(set y 5)
+5
+(begin (print x) (print y) (* x y))
+  4
+  5
+20
+(if (> y 0) 5 10)
+5
+(while (> y 0)
+    (begin (set x (+ x x)) (set y (- y 1))))
+0
+x
+128
+(define +1 (x) (+ x 1))
+(+1 4)
+5
+(define double (x) (+ x x))
+(double 4)
+8
+x
+128
+(define setx (x y) (begin (set x (+ x y)) x))
+(setx x 1)
+129
+x
+128
+(define not (boolval) (if boolval 0 1))
+(define <> (x y) (not (= x y)))
+(define mod (m n) (- m (* n (/ m n))))
+(define gcd (m n)
+      (begin
+          (set r (mod m n))
+          (while (<> r 0)
+               (begin
+                    (set m n)
+                    (set n r)
+                    (set r (mod m n))))
+          n))
+(gcd 6 15)
+3
+(define gcd (m n)
+      (if (= n 0) m (gcd n (mod m n))))
+(gcd 6 15)
+3
+quit

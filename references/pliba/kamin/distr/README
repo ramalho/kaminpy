@@ -1,0 +1,893 @@
+The directory distr contains the code associated with the book
+"Programming Languages: An Interpreter-based Approach," by Sam Kamin.
+Please report problems to:
+
+	Sam Kamin			kamin@cs.uiuc.edu
+        Computer Science Dept.		(217) 333-8069
+        1304 W. Springfield
+        Urbana, IL 61801
+
+The directory can be obtained either by copying the file distr.tar.Z,
+then uncompressing and de-tar'ing, or by copying the files directly
+out of the distr directory.  If copying the .Z file, be sure to set
+the "binary" flag.
+
+CONTENTS OF THIS FILE
+=====================
+
+This file contains a number of sections, delimited by a section
+name in capital letters and the "=====" underline.  The first
+several sections are notes about the distribution itself, the
+remainder contain code from various contributors to enhance the
+interpreters or fix portability bugs.
+
+FILES: A description of each of the files in the distribution.
+TESTING THE CODE: How to test and install the interpreters on
+       Unix systems.
+PORTABILITY: Notes about where the interpreters run and where
+       they need (usually slight) changes.
+PROBLEMS: Possible things you might run into when testing/installing
+BUGS: Known bugs, mostly minor.
+
+The following sections contain user-contributed code.  The first
+two relate to VAX VMS systems, the next three to Turbo Pascal, and
+the last provides an interpreter-independent load feature.  All
+are offered, needless to say, without warranty.
+
+FIX TO VAX VMS CODE TO HANDLE LONG OUTPUT LINES
+TEST.INTERPS FOR VAX VMS
+THE PROCEDURE reader FOR TURBO PASCAL, VERSION 3.0
+THE PROCEDURE reader FOR TURBO PASCAL, VERSION 5.5
+A FIX FOR THE NON-LOCAL GOTO PROBLEM IN TURBO PASCAL FOR PC'S
+INTERPRETER-INDEPENDENT LOAD
+
+FILES
+=====
+
+A copy of this file is contained in the distr directory, as well as
+a file called TEST.INTERPS, explained later.  Aside from these two
+files, there are three type of files in the directory:
+
+1. Interpreters (Pascal source files):
+
+     chap1.p - Chapter 1
+     lisp.p - Lisp
+     apl.p - APL
+     scheme.p - Scheme
+     sasl.p - SASL
+     clu.p - CLU
+     smalltalk.p - Smalltalk
+     prolog.p - Prolog
+     lisp.stack.p - Lisp, using a stack (from Chapter 10)
+     lisp.ms-gc.p - Lisp, with mark-scan garbage collector (from Chapter 10)
+     lisp.ss-gc.p - Lisp, with semi-space garbage collector (from Chapter 10)
+     lisp.refcnt.p - Lisp, with reference-counting (from Chapter 10)
+
+2. Code files, including all code from chapters (plus some test cases
+   not appearing in text).  Note that you may be unable to run these
+   files as is due to memory limitations.  In that case, just split them
+   up and run the pieces separately.  (The Prolog code is given in two
+   pieces to avoid the problem of redefining predicates.)
+
+     code.ch1 - Chapter 1
+     code.lsp - Lisp
+     code.apl - APL
+     code.sch - Scheme
+     code.ssl - SASL
+     code.clu - CLU
+     code.smt - Smalltalk
+     code1.pro - Prolog, part 1
+     code2.pro - Prolog, part 2
+     code.gc.lsp - Garbage-collecting Lisp's (This is the same as code.lsp,
+        but slightly shorter;  there is one example in code.lsp that needs
+        more memory than the garbage-collecting versions of Lisp allocate
+        as given.)
+        
+3. Output of code files.  Use these to check that the interpreters
+   are running correctly.
+
+     code.ch1.o - output from running chap1.p on code.ch1
+     code.lsp.o - output from running lisp.p on code.lsp
+     code.apl.o - output from running apl.p on code.apl
+     code.sch.o - output from running scheme.p on code.sch
+     code.ssl.o - output from running sasl.p on code.ssl
+     code.clu.o - output from running clu.p on code.clu
+     code.smt.o - output from running smalltalk.p on code.smt
+     code1.pro.o - output from running prolog.p on code1.pro
+     code2.pro.o - output from running prolog.p on code2.pro
+     code.stack.o - output from running lisp.stack.p on code.gc.lsp
+     code.ms-gc.o - output from running lisp.ms-gc.p on code.gc.lsp
+     code.ss-gc.o - output from running lisp.ss-gc.p on code.gc.lsp
+     code.refcnt.o - output from running lisp.refcnt.p on code.gc.lsp
+
+
+TESTING THE CODE
+================
+
+When running correctly, the result of executing the interpreter xxx
+on file code.xxx should be identical to file code.xxx.o.
+
+On Unix systems, test the interpreters by running the shell procedure
+file TEST.INTERPS.  It compiles them, runs them on the code.xxx files, and
+compares the results to the code.xxx.o files.  Before running
+TEST.INTERPS, make sure the name of the Pascal compiler ("pc" by
+default) is correct.  TEST.INTERPS says what output to expect.
+It will leave the original files, plus the binaries of
+the various interpreters, with names: chap1, lisp, apl, scheme,
+sasl, clu, smalltalk, prolog, lisp-stack, lisp-msgc, lisp-ssgc,
+and lisp-refcnt.
+
+
+PORTABILITY
+===========
+
+The interpreters are written in standard Pascal, and should run
+without change in most systems, especially Unix systems.
+They have been tested on the following systems:
+
+     Machine and O.S.: SUN 3/60, OS4.0
+     Compiler: "pc" (dated March, 1988)
+
+     Machine and O.S.: Sequent Symmetry, Dynix V3.0.17.7
+     Compiler: "pascal" (V3.0.1, Silicon Valley Software, c. 1987)
+     (but see below)
+
+     Machine and O.S.: DEC VAX 780, Unix 4.3bsd
+     Compiler: "pc" (v. 5.1, dated 6/5/85)
+
+     Machine and O.S.: DEC VAX 780, VMS 5.3
+     Compiler: VAX Pascal V4.1
+
+     Machine and O.S.: Encore Multimax
+     Compiler: "pc" (from Oregon Software, v. 1.5, dated 4/27/87)
+
+     Machine and O.S.: Pyramid, OSx
+     Compiler: "pascal" ("man" page dated 1/20/87)
+
+     Machine and O.S.: Mac II and SE/30, A/UX
+     Compiler: VP, from  Virginia Tech
+              (contact Mat Davis, davism@csgrad.cs.vt.edu)
+
+However, the following portability problems have been noted:
+
+     Sequent: Occurrences of "integer" should be changed to "longint"
+              (to give 32-bit integers), at least in smalltalk.p.  The
+              test cases in code.smt will not run correctly with the
+              default 16-bit integers.
+
+     Multimax: The compiler (actually, the loader) reports an
+              error message on my system, but everything seems to
+              work fine anyway.  (This is probably a local problem.)
+
+     VAX VMS (thanks to Mike Berman):  The default output buffer
+              is set too small for some programs.  In fact, the
+              problem only shows up in the Scheme test cases.
+              A fix is included below.  A minor problem is that
+              the filenames in this distribution are not legal,
+              as filenames in VMS can contain only one period.
+              A version of TEST.INTERPS for VMS is given below.
+
+     HP9000 (thanks to Tim Budd):  The Pascal system automatically
+              breaks output lines at 256 characters and adds newlines
+              before closing files.  This causes two types of errors
+              when running the TEST.INTERPS script:  (1) Every
+              test gives a "missing newline" error;  (2) The Scheme
+              test produces a long list of errors, where code.sch.o
+              has long lines that are broken into two or three lines
+              by the interpreter (but are otherwise identical).  Both
+              types of errors are benign, and should be ignored.
+
+     Turbo-Pascal on IBM PC's and compatibles:
+              There are two portability problems with this compiler:
+                (1) It does not support non-local goto's, which are used
+                    in all the interpreters for aborting computations
+                    when errors occur.  Since they are only used in
+                    erroneous situations, one solution is just to replace
+                    them by "halt"s;  this is ugly, but a correct
+                    solution would be quite involved.
+                    (I have received a solution to this problem,
+                    which is given at the end of this file.)
+                (2) The treatment of "eoln" is somewhat different from
+                    the Unix compilers, so the input routine "reader"
+                    has to be fixed in all interpreters (it is identical
+                    in all of them).  A correct version of reader
+                    for TP is given below (at least, I'm told it works).
+
+PROBLEMS
+========
+
+The most likely source of problems when testing the interpreters is running
+out of memory.  To alleviate the problem, I have made the following
+adjustments:
+
+	code.lsp: The "quit" has been inserted before
+                line 414: "(r-e-p-loop '(", the first line of
+		an 86-line expression whose evaluation uses enormous
+		amounts of memory.
+
+	code.sch: Line 305: "(differentiate '(Dx (+ x c)))" has
+                been commented out.
+
+	code2.pro: The second Prolog file, code2.pro, is not run by
+                TEST.INTERPS.  It is very memory-hungry.
+
+BUGS
+====
+
+There are several minor bugs that I am not intending to fix but
+which it might be good for you to know about.  (The reason I won't
+fix them is because I am very determined to keep the code in the book
+and the code actually used by students identical;  I believe it is
+pedagogically important that students not have the feeling that there
+are things going on behind their backs.)
+
+1. Normally, blank input is allowed.  The interpreters respond to
+  a newline entered at the -> prompt by ignoring it and issuing another
+  prompt.  However, if the very first thing typed to the interpreter is
+  a newline, it will not print the prompt.  (It will, however, accept
+  whatever is typed in at that point as legitimate input.  In other words,
+  the only problem is that the prompt is not typed.)  (Thanks to Tim Budd
+  for pointing this out.)
+
+2. The interpreters should respond more gracefully when the "quit" is
+  omitted from an input file.  In most versions of Pascal, the interpreter
+  aborts with an error message like "eof on input," but in some it loops,
+  which is really annoying.
+
+3. There are two places, one in clu.p and one in smalltalk.p, where
+  an incorrect error message is printed.  These errors are included in
+  the book on pages 550 and 563 (see the ERRATA file).  I have chosen
+  to fix these in the distributed code.
+
+4. In the scheme interpreter, the eval function, when applying a
+  function (in the APEXP case), does not check that the operator is
+  in fact a function.  Thus, an erroneous application like (3 4) will
+  cause the interpreter to crash rather than print an error message.
+  To fix this, lines 945-946, which currently read:
+
+               else eval :=
+                      applyClosure(op, evalList(args))
+
+  should be changed to:
+
+               if op^.sxptype = CLOSXP
+               then eval := applyClosure(op, evalList(args))
+               else begin
+                       writeln('Attempted to apply a non-closure');
+                       goto 99;
+                    end
+
+  (Thanks to Dirk Grunwald for this one.)
+
+
+FIX TO VAX VMS CODE TO HANDLE LONG OUTPUT LINES
+===============================================
+
+The following code was provided by Mike Berman of Glassboro State
+College, N.J.  Note that it goes at the very beginning of the
+top level.  Only the Scheme interpreter needs to be changed in
+order to run the test cases, but of course you may write programs
+with long output in any language.
+
+begin (* scheme main *)
+
+(* modification for VAX Pascal to allow long lines of output *)
+(* 	Mike Berman, Glassboro State College, 10/29/90       *)
+(* set the value after record_length:= to whatever you think *)
+(* will be adequate for your environment; I chose 2^11 more  *)
+(* or less arbitrarily.				             *)
+
+   open( output, record_length:=2048 );
+
+(* end of modification *)
+
+
+TEST.INTERPS FOR VAX VMS
+========================
+
+This is also provided by Mike Berman.  He would like me to make
+it clear that this is strictly a hack and totally unsupported.
+However, it might save you some work, so here it is.  Note that he
+uses filenames that are different from those in this distribution.
+In particular, xxx.p becomes xxx.pas (required by VMS
+Pascal), and code.xxx.o becomes code-xxx.o (the former is not
+a legal filename in VMS).
+
+$! test-interps.com
+$! translated from the unix shell script test-interps
+$! Michael Berman, Glassboro State College
+$! Berman@glassboro.edu
+$!
+$! There's a crude hack in here -- when you RUN in VMS with the /INPUT=
+$! parameter, it runs in the background and the COM file continues to
+$! execute.  Since the next thing that gets done is the DIFF of the
+$! output files, this fails because the program is still running and 
+$! hasn't finished creating the output files.  That's the reason for the
+$! WAIT 00:01 lines, which wait for 1 minute.  On my system, 1 minute was
+$! enough for all but the Smalltalk example, for which 2 minutes was adequate.
+$! Obviously, you may need to adjust these if your system is heavily loaded.
+$! I'm sure there's a better way to accomplish the same objective.
+$!
+$! This .com file also uses the convention that the files of the form 
+$! code.xxx.o (in Unix) have been renamed code-xxx.o, for VMS compatibility.
+$!
+$echo:==write sys$output
+$echo "This file compiles all interpreters, saving binaries, and"
+$echo "tests them by running them on files code.xxx (xxx the language name)"
+$echo "and comparing the output to the files code-xxx.o."
+$echo ""
+$echo "The expected output from running this file is the list of messages:"
+$echo ""
+$echo "Compiling CHAP1; binary is chap1"
+$echo "Running CHAP1"
+$echo "Number of difference sections found: 0"
+$echo "Number of difference records found: 0"
+$echo ".... etc. ..."
+$echo "Compiling LISP; binary is lisp"
+$echo "Running LISP"
+$echo ""
+$echo "and so on.  If the output from any interpreter differs from"
+$echo "what it should be, the DIFFERENCES command will report differences"
+$echo "in the files."
+$echo ""
+$echo "See the README file for more information"
+$echo ""
+$echo "Compiling CHAP1; binary is chap1"
+$pascal chap1.pas
+$link chap1
+$echo "Running CHAP1"
+$run/input=code.ch1/output=chap1.out chap1
+$wait 00:01
+$diff code-ch1.o chap1.out
+$del chap1.out;*
+$echo "Compiling LISP; binary is lisp"
+$pascal  lisp.pas
+$link lisp
+$echo "Running LISP"
+$run/input=code.lsp/output=lisp.out lisp  
+$wait 00:01
+$diff code-lsp.o lisp.out
+$del lisp.out;*
+$echo "Compiling APL; binary is apl"
+$pascal  apl.pas
+$link apl
+$echo "Running APL"
+$run /input=code.apl/output=apl.out apl 
+$wait 00:01
+$diff code-apl.o apl.out
+$del apl.out;1
+$echo "Compiling SCHEME; binary is scheme"
+$pascal  scheme.pas
+$link scheme
+$echo "Running SCHEME"
+$run /input=code.sch/output=scheme.out scheme 
+$wait 00:01
+$diff code-sch.o scheme.out
+$del scheme.out;1
+$echo "Compiling SASL; binary is sasl"
+$pascal  sasl.pas
+$link sasl
+$echo "Running SASL"
+$run /input=code.ssl /output=sasl.out sasl
+$wait 00:01
+$diff code-ssl.o sasl.out
+$del sasl.out;1
+$echo "Compiling CLU; binary is clu"
+$pascal  clu.pas
+$link clu
+$echo "Running CLU"
+$run/input=code.clu/output=clu.out clu 
+$wait 00:01
+$diff code-clu.o clu.out
+$del clu.out;1
+$echo "Compiling SMALLTALK; binary is smalltalk"
+$pascal  smalltalk.pas
+$link smalltalk
+$echo "Running SMALLTALK"
+$run /input=code.smt/output=smalltalk.out smalltalk 
+$wait 00:02
+$diff code-smt.o smalltalk.out
+$del smalltalk.out;1
+$echo "Compiling PROLOG; binary is prolog"
+$pascal  prolog.pas
+$link prolog
+$echo "Running PROLOG - file 1"
+$run/input=code1.pro/output=prolog1.out prolog 
+$wait 00:01
+$diff code1-pro.o prolog1.out
+$del prolog1.out;1
+$! echo "Running PROLOG - file 2"
+$! run /input=code2.pro/output=prolog2.out prolog 
+$! wait 00:01
+$! diff code2-pro.o prolog2.out
+$! del prolog2.out;1
+$echo "Compiling stacking version of LISP; binary is lisp-stack"
+$pascal  lisp-stack.pas
+$link lisp-stack
+$echo "Running stacking version of LISP"
+$run/input=code-gc.lsp/output=lisp-stack.out lisp-stack 
+$wait 00:01
+$diff code-stack.o lisp-stack.out
+$del lisp-stack.out;1
+$echo "Compiling mark-scan version of LISP; binary is lisp-msgc"
+$pascal  lisp-msgc.pas
+$link lisp-msgc
+$echo "Running mark-scan version of LISP"
+$run/input=code-gc.lsp/output=lisp-msgc.out lisp-msgc 
+$wait 00:01
+$diff code-msgc.o lisp-msgc.out
+$del lisp-msgc.out;1
+$echo "Compiling semi-space version of LISP; binary is lisp-ssgc"
+$pascal  lisp-ssgc.pas
+$link lisp-ssgc
+$echo "Running semi-space version of LISP"
+$run/input=code-gc.lsp/output=lisp-ssgc.out lisp-ssgc 
+$wait 00:01
+$diff code-ssgc.o lisp-ssgc.out
+$del lisp-ssgc.out;1
+$echo "Compiling reference-counting version of LISP; binary is lisp-refcnt"
+$pascal  lisp-refcnt.pas
+$link lisp-refcnt
+$echo "Running reference-counting version of LISP"
+$run /input=code-gc.lsp /output=lisp-refcnt.out lisp-refcnt 
+$wait 00:01
+$diff code-refcnt.o lisp-refcnt.out
+$del lisp-refcnt.out;1
+
+
+THE PROCEDURE reader FOR TURBO PASCAL, VERSION 3.0
+==================================================
+
+Simply replace the reader procedure in all interpreters by the
+following.  Together with replacing all occurrences of "goto 99"
+by "halt", the interpreters should run in TP.
+
+(* reader - read char's into userinput; be sure input not blank  *)
+procedure reader;
+
+(* readInput - read char's into userinput                        *)
+   procedure readInput;
+
+   var c: char;
+(* nextchar - read next char - filter tabs and comments          *)
+      procedure nextchar (var c: char);
+      begin
+         read(con,c);
+         if c = chr(TABCODE)
+         then c := ' '
+         else if c = COMMENTCHAR
+              then begin
+                   while (c<>chr(13)) do read(con,c);
+                   read(con,c);
+                   c := ' ';
+                   end
+      end; (* nextchar *)
+
+(* readParens - read char's, ignoring newlines, to matching ')'  *)
+      procedure readParens;
+      var
+         parencnt: integer; (* current depth of parentheses *)
+         c: char;
+      begin
+         parencnt := 1; (* '(' just read *)
+         repeat
+            nextchar(c);
+            if (c=chr(13)) then
+               begin
+               read(con,c);
+               write(PROMPT2);
+               c:=' ';
+               end;
+            pos := pos+1;
+            if pos = MAXINPUT
+            then begin
+                    writeln('User input too long');
+                    halt
+                 end;
+            userinput[pos] := c;
+            if c = '(' then parencnt := parencnt+1;
+            if c = ')' then parencnt := parencnt-1;
+         until parencnt = 0
+      end; (* readParens *)
+
+   begin (* readInput *)
+      write(PROMPT);
+      pos := 0;
+      repeat
+         pos := pos+1;
+         if pos = MAXINPUT
+         then begin
+                 writeln('User input too long');
+                 halt
+              end;
+         nextchar(c);
+         if (c=chr(13)) then read(con,c);
+         userinput[pos] := c;
+         if userinput[pos] = '(' then readParens
+      until c=chr(10);
+      inputleng := pos;
+      userinput[pos+1] := COMMENTCHAR (* sentinel *);
+   end; (* readInput *)
+
+begin (* reader *)
+    repeat
+       readInput;
+       pos := skipblanks(1);
+    until pos <= inputleng (* ignore blank lines *)
+end; (* reader *)
+
+
+THE PROCEDURE reader FOR TURBO PASCAL, VERSION 5.5
+==================================================
+
+Simply replace the reader procedure in all interpreters by the
+following.  Together with replacing all occurrences of "goto 99"
+by "halt", the interpreters should run in TP.  (Thanks to David
+Maharry of Wabash College in Indiana for this code.)
+
+(* Chapter 1 interpreter from Kamin, modified for Turbo Pascal V5.5
+   using new Reader procedure
+
+   By: David E. Maharry
+       Wabash College
+   Date: June 6, 1990
+*)
+
+(* reader - read char's into userinput; be sure input not blank  *)
+procedure reader;
+
+(* readInput - read char's into userinput                        *)
+   procedure readInput;
+
+   const LINEMAX = 80;
+
+   type line_type = String[LINEMAX];
+
+   var line : line_type;
+       parencount : INTEGER;
+       inputdone : BOOLEAN;
+       i: INTEGER;
+
+(* checkForComment - function to look and find commentchar in line *)
+   function checkforcomment(line : line_type):integer;
+
+   (* returns 0 if no comment, else position of commentchar *)
+   var found : boolean;
+       i : integer;
+   begin
+     found := FALSE;
+     i := 0;
+     while (i < length(line)) and (not found) do
+       begin
+         i := i + 1;
+         found := (line[i] = COMMENTCHAR)
+       end;
+     if found then checkforcomment := i
+              else checkforcomment := 0
+   end; (* checkforcomment *)
+
+(* filters out tabs and comments *)
+   procedure filter ( var line : line_type );
+
+   var temp : line_type;
+       i : INTEGER;
+   begin
+       temp := '';
+       for i := 1 to length(line) do
+           if line[i] = chr(TABCODE)
+              then temp := temp + ' '
+              else temp := temp + line[i];
+       i := checkforcomment(line);
+       if i <> 0 then line := copy(temp, 1, i-1)
+                 else line := temp
+   end; (* filter *)
+
+(* matches left and right parens in line *)
+   function countparen(line : line_type): INTEGER;
+
+   var i, count : INTEGER;
+   begin
+      count := 0;
+      for i := 1 to length(line) do
+        begin
+          if line[i] = '(' then count := count + 1
+          else if line[i] = ')' then count := count - 1;
+        end;
+      countparen := count
+   end; (* countparen *)
+
+   begin (* readInput *)
+      parencount := 0;
+      inputleng := 0;
+      repeat
+         if inputleng = 0 then write(PROMPT)
+                          else write(PROMPT2);
+         readln(line);
+         filter(line);
+         parencount := parencount + countparen(line);
+         if parencount < 0 then begin
+                                  writeln('Invalid parentheses.');
+                                  halt(1)
+                                end;
+         inputdone := (parencount = 0);
+         if inputleng + length(line) >= MAXINPUT
+         then begin
+                 writeln('User input too long');
+                 halt(1)
+              end;
+         if inputleng > 0 then
+(* puts a space between input lines *)
+           begin
+             inputleng := inputleng + 1;
+             userinput[inputleng] := ' '
+           end;
+         for i := 1 to length(line) do
+           begin
+             inputleng := inputleng + 1;
+             userinput[inputleng] := line[i]
+           end
+      until inputdone;
+      userinput[inputleng+1] := COMMENTCHAR (* sentinel *)
+   end; (* readInput *)
+
+begin (* reader *)
+    repeat
+       readInput;
+       pos := skipblanks(1);
+    until pos <= inputleng; (* ignore blank lines *)
+end; (* reader *)
+
+
+A FIX FOR THE NON-LOCAL GOTO PROBLEM IN TURBO PASCAL FOR PC'S
+=============================================================
+
+I have received this fix from Norm Neff of Trenton State College
+(neff@pilot.njin.net).  He says it should work on TP versions 4.0
+and up, but adds "it's been tested [on TP 5.0], but not class-
+tested."
+
+(* **BEGIN*** DECL99.PAS Declarations for goto ************** *)
+(* Steps to enable nonlocal goto, TP v. 5.0
+  1.  Insert these declarations, first in the main program's decl part
+  2.  Insert contents of DEF99.PAS in the main program's stmt part,
+      immediately prior to the statement labeled 99.
+  3.  Change each 'goto 99' statement of the original program to the
+      procedure call 'goto99'.  Also, use 'goto99' 's in the reader.
+ 
+  Prepared by
+   Norman Neff
+   Computer Science Department
+   Trenton State College
+   Hillwood Lakes CN550
+   Ewing Township, NJ 08625-0550 
+   neff@pilot.njin.net	                                      *)
+ 
+var  cs99,ss99,ds99,ip99,sp99,bp99:integer;(*must be global*)
+ 
+procedure goto99;
+var Dslocal:integer;
+    destination: record
+                 ip,cs: integer
+                 end;
+begin  (* Restores DS , CS, IP *)
+ DSlocal := ds99;
+ destination.ip := ip99;
+ destination.cs := cs99;
+  inline  (* ADDRESSING wrt SS:BP *)
+    ($8E/$9E/Dslocal/       (* MOV       DS,DsLocal[BP]   *)
+     $FF/$AE/destination ); (* JMP FAR  ( destination[BP])   *)
+end;
+ 
+procedure SaveIP(var ipv:integer);
+(* ipv := return address *)
+var iphold:integer;
+begin
+  inline  (* ADDRESSING wrt SS:BP *)
+    ( $53/               (* PUSH BX *)
+      $8B/$9E/$02/$00/   (* MOV BX, 2[BP]      *)
+      $89/$9E/IPHOLD/    (* MOV iphold[BP],BX  *)
+      $5B                (* POP BX *) );
+  ipv := iphold;
+end;
+(* **END***** DECL99.PAS Declarations for goto ************** *)
+
+
+ (*  *****BEGIN**** DEF99.PAS ***************************  *)
+ (*  To be inserted immediately before the statement labeled 99
+   in the program's top level  *)
+
+  inline   (*  save state *)
+    ($89/$2E/BP99/       (* MOV  BP99,BP *)
+     $89/$26/SP99/       (* MOV  SP99,SP *)
+     $8C/$16/SS99/       (* MOV  SS99,SS *)
+     $8C/$1E/DS99/       (* MOV  DS99,DS *)
+     $8C/$0E/CS99);      (* MOV  CS99,CS *)
+  SaveIP(ip99);
+  (*  call to goto99  jumps to this entry point *)
+  inline  (*  complete restoring state  *)
+    ($8E/$16/SS99/       (* MOV  SS,SS99 *)
+     $8B/$26/SP99/       (* MOV  SP,SP99 *)
+     $8B/$2E/BP99);      (* MOV  BP,BP99 *)
+
+ (*               ENTRY POINT 99 FOLLOWS    :           *)
+ (*  *****END****** DEF99.PAS ************************  *)
+
+
+INTERPRETER-INDEPENDENT LOAD
+============================
+
+The following is from Paul Mullins of Youngstown State University.
+I tried it and it worked fine for me.  Remember that before using it,
+you have to compile the "frontend.c" file (naming the program "frontend")
+and modify the variable "$INTERPS" to give the directory containing
+the interpreters.  Also, when run with this system, if you terminate
+with "quit", you have to enter two carriage-returns before the program
+will stop;  you can also terminate with a single CTRL-D.
+
+I might point out that on Unix systems a cheap way to load a single
+file at the beginning of an interpreter session, followed by input
+from the terminal, is this:
+
+cat <input> - | <interpreter>
+
+in which the file <input> is the program to be loaded (without a
+"quit" at the end!).  Again, you will find you have to enter
+carriage-return twice at the end of the session after typing "quit".
+Alternatively, you can create a file "quitfile" containing the
+single line "quit", and start it like this:
+
+cat <input> - quitfile | <interpreter>
+
+in which case the session is terminated by entering CTRL-D.
+
+The remainder of this section is quoted directly from Professor Mullins:
+
+The code which follows is provided without warranty or copyright.  Use it
+or not as you see fit.  Sample session:
+
+	$ fe prolog in1 in2
+	  reading in1
+	  done reading in1
+	  reading in2
+	  done reading in2
+	-> > > > satisfied
+	-> > > not satisfied
+	-> load in3
+	  reading in3
+	  done reading in3
+	->
+	satisfied
+	-> ^d
+	$
+
+----------------------------------------------------------------------------
+Paul M. Mullins                      mullins@macs.ysu.edu
+Dept of Mathematical                 FC137501@YUB
+ and Computer Sciences               fc137501@ysub.ysu.edu
+Youngstown State University
+Youngstown, OH 44555-0001            (216) 742-3796
+
+
+SHAR FILE - feed to sh
+-------------------------- cut here ------------------------------------------
+#! /bin/sh
+# This is a shell archive.  Remove anything before this line, then unpack
+# it by saving it into a file and typing "sh file".  To overwrite existing
+# files, type "sh file -c".  You can also feed this as standard input via
+# unshar, or by typing "sh <file", e.g..  If this archive is complete, you
+# will see the following message at the end:
+#		"End of shell archive."
+# Contents:  fe frontend.c
+# Wrapped by mullins@ysumax on Wed Nov 28 13:20:34 1990
+PATH=/bin:/usr/bin:/usr/ucb ; export PATH
+if test -f 'fe' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'fe'\"
+else
+echo shar: Extracting \"'fe'\" \(793 characters\)
+sed "s/^X//" >'fe' <<'END_OF_FILE'
+X#! /bin/sh
+X# NOT copyright by Paul Mullins
+X# You may distribute, modify, remove my name, ...
+X# This is a front end for various interpreters which are located
+X# in $INTERPS.  It invokes a C frontend which allow command files
+X# to be sent to the interpreter.  A list of files to be preloaded
+X# may be specified on the command line.
+X
+X# site dependent
+XINTERPS=distr
+X
+X# check argument count
+Xcase $# in
+X0) echo usage: $0 interp_name \[file_list\]; exit 0;;
+X*) ;;
+Xesac
+X
+X# Modify CMD to the string most appropriate for the named interpreter
+Xcase $1 in
+Xchap1 | lisp | apl | scheme | sasl | clu | smalltalk) CMD=load;;
+Xprolog) CMD=consult;;
+Xlisp-msgc | lisp-ssgc | lisp-stack) CMD=load;;
+X*) echo unknown interpreter $1; exit 0;;
+Xesac
+X
+XINT=$1
+Xshift
+X
+X# invoke it
+X$INTERPS/frontend $CMD $@ | $INTERPS/$INT
+END_OF_FILE
+if test 793 -ne `wc -c <'fe'`; then
+    echo shar: \"'fe'\" unpacked with wrong size!
+fi
+chmod +x 'fe'
+# end of 'fe'
+fi
+if test -f 'frontend.c' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'frontend.c'\"
+else
+echo shar: Extracting \"'frontend.c'\" \(1098 characters\)
+sed "s/^X//" >'frontend.c' <<'END_OF_FILE'
+X/* invocation: frontend string [file_list] */
+X/* NOT copyright Paul M. Mullins
+X * You may copy, modify, remove my name, ...
+X */
+X#include <stdio.h>
+X#include <ctype.h>
+X#define MAXLINE 1024
+X/* cmd is a prefix string which is followed by a blank and a file name */
+X/* uses brain damaged approach - leading blanks aren't stripped, etc */
+Xchar *cmd;
+X
+Xvoid fileread (fn)
+Xchar *fn;
+X{
+XFILE *fp, *fopen();
+Xint c;
+X
+X fprintf(stderr,"\tReading file %s\n", fn);
+X if ((fp=fopen(fn,"r"))==NULL) {
+X 	fprintf(stderr,"\tRead failed\n");
+X 	exit(1);
+X 	}
+X while ((c=getc(fp))!=EOF)
+X 	putchar(c);
+X fflush(stdout);
+X fprintf(stderr,"\tDone reading %s\n",fn);
+X}
+X
+Xmain (argc, argv)
+Xint argc;
+Xchar **argv;
+X{
+Xint i;
+Xchar line[MAXLINE];
+X
+X if (argc < 2) {
+X	fprintf(stderr,"usage: %s cmd_string [file_list]\n",argv[0]);
+X	exit (1);
+X	}
+X else cmd = argv[1];
+X
+X for (i=2; i<argc; i++)
+X	fileread(argv[i]);
+X
+X while (gets(line) != NULL) {
+X	if (strncmp(cmd,line,strlen(cmd))==0) {
+X		for (i=strlen(cmd); isspace(line[i]) && (i < MAXLINE); i++);
+X		fileread (line+i);
+X		}
+X	else
+X		printf("%s\n",line);
+X	fflush(stdout);
+X	}
+X printf("quit\n");
+X}
+END_OF_FILE
+if test 1098 -ne `wc -c <'frontend.c'`; then
+    echo shar: \"'frontend.c'\" unpacked with wrong size!
+fi
+# end of 'frontend.c'
+fi
+echo shar: End of shell archive.
+exit 0
+

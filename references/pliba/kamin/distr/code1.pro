@@ -1,0 +1,118 @@
+; Section 8.1
+(infer (different yellow blue))
+(infer (different yellow red))
+(infer (different blue yellow))
+(infer (different blue red))
+(infer (different red yellow))
+(infer (different red blue))
+;
+(infer (mapb-coloring A B C D E F)
+     from (different A B) (different A C) (different A D) (different A F)
+       (different B C) (different B E) (different C E) (different C D)
+       (different D E) (different E F))
+(infer?  (mapb-coloring A B C D E F))
+(infer? (print))
+(infer?  (mapb-coloring A B C D E F) (print A B C D E F))
+(infer? (print yellow blue red blue yellow blue))
+;
+(infer (member X (cons X L)))
+(infer (member X (cons Y M)) from (member X M))
+(infer?  (member 3 (cons 2 (cons 3 nil))))
+(infer? (print))
+(infer?  (member 3 (cons 2 (cons 4 nil))))
+(infer? fail)
+; Section 8.2.2
+(infer imokay from youreokay hesokay)
+(infer youreokay from theyreokay)
+(infer hesokay)
+(infer theyreokay)
+(infer?  imokay)
+(infer? (print))
+(infer hesnotokay from imnotokay)
+(infer shesokay from hesnotokay)
+(infer shesokay from theyreokay)
+(infer?  shesokay)
+(infer? (print))
+(infer hesnotokay from shesokay)
+(infer hesnotokay from imokay)
+; section 8.2.3
+(infer (addtoend nil X (cons X nil)))
+(infer (addtoend (cons Y L) X (cons Y M)) from (addtoend L X M))
+(infer?  (addtoend (cons 3 nil) 4 L) (print L))
+(infer? (print (cons 3 (cons 4 nil))))
+(infer?  (addtoend L 4 (cons 3 (cons 4 nil))) (print L))
+(infer? (print (cons 3 nil)))
+;
+(infer (reverse nil nil))
+(infer (reverse (cons X L) M) from (reverse L N) (addtoend N X M))
+(infer?  (reverse (cons 1 (cons 2 nil)) L) (print L))
+(infer? (print (cons 2 (cons 1 nil))))
+(infer?  (reverse L (cons 1 (cons 2 nil))) (print L))
+(infer? (print (cons 2 (cons 1 nil))))
+;
+(infer (append nil L L))
+(infer (append (cons X L) M (cons X N)) from (append L M N))
+(infer? (append nil (cons 3 nil) L) (print L))
+(infer? (print (cons 3 nil)))
+(infer? (append (cons 3 (cons 4 nil)) (cons 5 (cons 6 nil)) L)
+       (print L))
+(infer? (print (cons 3 (cons 4 (cons 5 (cons 6 nil))))))
+(infer? (append L (cons 6 (cons 7 nil)) (cons 5 (cons 6 (cons 7 nil))))
+       (print L))
+(infer? (print (cons 5 nil)))
+;
+(infer (member X L) from (append L1 (cons X L2) L)).
+(infer (lookup K A L) from (member (pair K A) L))
+(infer (capitols (cons (pair chile santiago) (cons (pair peru lima) nil))))
+(infer?  (capitols C) (lookup peru Capitol C) (print Capitol))
+(infer? (print lima))
+;
+(infer (mult 0 Y 0))
+(infer (mult X Y Z) from (minus X 1 V) (mult V Y W) (plus W Y Z))
+(infer?  (mult 3 5 X) (print X))
+(infer? (print 15))
+(infer (mult X Y Z) from (minus X 1 V) (plus W Y Z) (mult V Y W)).
+(infer (fac 0 1))
+(infer (fac N R) from (minus N 1 N1) (fac N1 R1) (mult R1 N R))
+(infer (naive-sort L M) from (permutation L M) (ordered M)).
+(infer (<= X X))
+(infer (<= X Y) from (less X Y))
+;
+(infer (ordered nil))
+(infer (ordered (cons A nil)))
+(infer (ordered (cons A (cons B L))) from (<= A B) (ordered (cons B L)))
+;
+(infer (permutation nil nil))
+(infer (permutation L (cons H T))
+      from (append V (cons H U) L) (append V U W) (permutation W T))
+;
+(infer (naive-sort L M) from (permutation L M) (ordered M)).
+(infer?  (naive-sort (cons 4 (cons 2 (cons 3 nil))) L) (print L))
+(infer? (print (cons 2 (cons 3 (cons 4 nil)))))
+;
+(infer (partition H (cons A X) (cons A Y) Z) from (<= A H) (partition H X Y Z))
+(infer (partition H (cons A X) Y (cons A Z)) from (less H A) (partition H X Y Z))
+(infer (partition H nil nil nil))
+;
+(infer (quicksort nil nil))
+(infer (quicksort (cons H T) S)
+      from
+      (partition H T A B)
+             (quicksort A A1)
+             (quicksort B B1)
+             (append A1 (cons H B1) S))
+(infer?  (quicksort (cons 8 (cons 2 (cons 3 (cons 7 (cons 1 nil))))) S)
+              (print S))
+(infer? (print (cons 1 (cons 2 (cons 3 (cons 7 (cons 8 nil)))))))
+;
+(infer (simplify (diff X X) nil))
+(infer (simplify (diff (cons X Y) Z) (cons X W)) from (simplify (diff Y Z) W))
+(infer?  (simplify (diff (cons 3 (cons 4 X)) X) L) (print L))
+(infer? (print (cons 3 (cons 4 nil))))
+(infer?  (simplify L (cons 3 (cons 4 nil))) (print L))
+(infer? (print (diff (cons 3 (cons 4 Z1)) Z1)))
+(infer (diffappend (diff L X) (diff X Y) (diff L Y))).
+(infer?  (diffappend (diff (cons 3 X) X) (diff (cons 4 Y) Y) Z)
+        (print Z))
+(infer? (print (diff (cons 3 (cons 4 Y)) Y)))
+quit

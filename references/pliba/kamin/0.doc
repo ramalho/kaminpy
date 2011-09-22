@@ -1,0 +1,59 @@
+Package:      lang/lisp/impl/kamin/kamin/
+
+Name:         Kamin
+
+Summary:      Source for the interpreter's in Sam Kamin's book
+
+Version:      7-DEC-90
+
+Description: 
+
+   This directory contains the source code for the interpreters from
+   Sam Kamin's book,
+      Samuel Kamin, "Programming Languages, An Interpreter-Based Approach", 
+      Addison-Wesley, Reading, Mass., 1990. ISBN 0-201-06824-9.
+   The book discusses interpreters for Pascal, Lisp, APL, Scheme, SASL,
+   CLU, Smalltalk and Prolog. The implementations center around a common
+   core that remains unchanged from language to language.
+
+Requires:     PASCAL
+
+Ports:        
+
+Origin:       a.cs.uiuc.edu:/pub/kamin/kamin.distr/distr.tar.Z
+
+Copying:      
+
+Updated:      Wed Oct 12 22:36:01 1994
+
+CD-ROM:       
+
+Bug Reports:  
+
+Mailing List: 
+
+Author(s):    Sam Kamin <kamin@cs.uiuc.edu>
+	      Computer Science Dept.          
+	      1304 W. Springfield
+	      Urbana, IL 61801
+	      Tel: 217-333-8069
+              
+Contact:      
+
+Keywords:     
+
+   Lisp!Implementations, Programming Languages!Lisp, Interpreters!Lisp,
+   Scheme!Implementations, Programming Languages!Scheme,
+   Interpreters!Scheme, Smalltalk!Implementations, Programming
+   Languages!Smalltalk, Interpreters!Smalltalk, Prolog!Implementations,
+   Programming Languages!Prolog, Interpreters!Prolog, Pascal!Code,
+   Authors!Kamin 
+
+Contains:    ???
+
+See Also:    
+
+References:   
+
+   Samuel Kamin, "Programming Languages, An Interpreter-Based Approach",
+   Addison-Wesley, Reading, MA, 1990. ISBN 0-201-06824-9.

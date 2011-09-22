@@ -1,0 +1,370 @@
+; From previous chapters (esp. Scheme and Lisp)
+(set +1 (lambda (x) (+ x 1)))
+(set mapcar (lambda (f l)
+     (if (null? l) '()
+      (cons (f (car l)) (mapcar f (cdr l)))))))
+(set sqr (lambda (x) (* x x)))
+(set cadr (lambda (x) (car (cdr x))))
+(set cddr (lambda (x) (cdr (cdr x))))
+(set cadddr (lambda (x) (car (cdr (cdr (cdr x))))))
+(set abs (lambda (x) (if (< x 0) (- 0 x) x)))
+(set mod (lambda (m n) (- m (* n (/ m n)))))
+(set divides (lambda (m n) (= (mod n m) 0)))
+(set length (lambda (l) (if (null? l) 0 (+1 (length (cdr l))))))
+(set append (lambda (x y)
+   (if (null? x) y
+      (cons (car x) (append (cdr x) y)))))
+(set list1 (lambda (x) (cons x '())))
+(set list2 (lambda (x y) (cons x (cons y '()))))
+(set not (lambda (x) (if x '() 'T)))
+(set or (lambda (x y) (if x x y)))
+(set and (lambda (x y) (if x y x)))
+(set cadr (lambda (x) (car (cdr x))))
+(set caddr (lambda (x) (car (cdr (cdr x)))))
+(set curry (lambda (f) (lambda (x) (lambda (y) (f x y)))))
+(set id (lambda (x) x))
+(set compose (lambda (f g) (lambda (x) (g (f x)))))
+(set member? (lambda (x l)
+   (if (null? l) '()
+     (if (= x (car l)) 'T
+        (member? x (cdr l))))))
+(set union (lambda (s1 s2)
+     (if (null? s1) s2
+         (if (member? (car s1) s2)
+                (union (cdr s1) s2)
+             (cons (car s1) (union (cdr s1) s2))))))
+(set empty-queue '())
+(set front (lambda (q) (car q)))
+(set rm-front (lambda (q) (cdr q)))
+(set enqueue (lambda (t q)
+   (if (null? q) (list1 t) (cons (car q) (enqueue t (cdr q))))))
+(set empty? (lambda (q) (null? q)))
+; Section 5.0
+(set pred (lambda (x) (> x 5)))
+(set fun-srch-for (lambda (n)
+     (find-val pred (interval 1 n) (+1 n))))
+(set find-val (lambda (pred lis failure-value)
+     (if (null? lis) failure-value
+         (if (pred (car lis)) (car lis)
+             (find-val pred (cdr lis) failure-value)))))
+(set interval (lambda (i j)
+   (if (> i j) '() (cons i (interval (+1 i) j)))))
+(fun-srch-for 10)
+6
+(set fun-srch-for-sqr (lambda (n)
+     (find-val pred (mapcar sqr (interval 1 n)) (sqr (+1 n)))))
+(fun-srch-for-sqr 10)
+9
+; Section 5.1
+(set fun-srch-while (lambda () (find-val pred (ints-from 1) '())))
+(set ints-from (lambda (i) (cons i (ints-from (+1 i)))))
+(fun-srch-while)
+6
+; Section 5.2.3
+(set x (mapcar +1 '(2 3)))
+'(... ...)
+(car x)
+3
+(cadr x)
+4
+x
+'(3 4 ...)
+(cddr x)
+'()
+x
+'(3 4)
+(set ints-from (lambda (i)
+        (cons i (ints-from (+1 i)))))
+(set ints (ints-from 0))
+'(... ...)
+(car ints)
+0
+(cadr ints)
+1
+ints
+'(0 1 ...)
+(set force (lambda (x)
+   (if (list? x)  ; apply list? to every component
+     (if (force (car x)) (force (cdr x)) '())
+     'T)))
+(set x (mapcar +1 '(2 3)))
+'(... ...)
+(force x)
+'T
+x
+'(3 4)
+(set first-n (lambda (n l)
+   (if (null? l) '()
+     (if (= n 0) '()
+       (cons (car l) (first-n (- n 1) (cdr l)))))))
+(set ints5 (first-n 5 ints))
+'(... ...)
+(force ints5)
+'T
+ints5
+'(0 1 2 3 4)
+(set next (lambda (n xi) (/ (+ xi (/ n xi)) 2)))
+(set xlist (lambda (xi n) (cons xi (xlist (next n xi) n))))
+(set mk-xlist (lambda (n) (xlist 1 n)))
+(set abs-conv (lambda (epsilon)
+   (lambda (l) (< (abs (- (cadr l) (car l))) epsilon))))
+(set abs-sqrt (lambda (n)
+   (find-list (abs-conv 3) cadr (mk-xlist n))))
+(set find-list (lambda (pred extract l)
+   (if (null? l) '() (if (pred l) (extract l)
+     (find-list pred extract (cdr l))))))
+(abs-sqrt 100)
+10
+(set next (lambda (n xi) (/ (+ xi (/ n (* xi xi))) 2)))
+(set abs-cbrt (lambda (n)
+     (find-list (abs-conv 2) cadr (mk-xlist n))))
+(abs-cbrt 100)
+5
+(set remove-multiples (lambda (n l)
+   (if (null? l) '()
+     (if (divides n (car l))
+        (remove-multiples n (cdr l))
+        (cons (car l) (remove-multiples n (cdr l)))))))
+(set sieve (lambda (l) (if (null? l) '()
+        (cons (car l)
+              (sieve (remove-multiples (car l) (cdr l)))))))
+(set primes<= (lambda (n) (sieve (interval 2 n))))
+(set primes (sieve (ints-from 2)))
+(set first-n-primes (lambda (n) (first-n n primes)))
+(set p (first-n-primes 5))
+(force p)
+p
+;
+(set next-int +1)
+(set repeat-until (lambda (init next pred)
+   (if (pred init) init
+     (repeat-until (next init) next pred))))
+(set new-fun-srch-while (lambda ()
+   (repeat-until 1 next-int pred)))
+(set pred (lambda (x) (> x 5)))
+(new-fun-srch-while)
+6
+;
+(set find-atom (lambda (s) (find-val pred (flatten s) '())))
+(set flatten (lambda (x)
+     (if (null? x) '()
+          (if (atom? x) (list1 x)
+              (append (flatten (car x)) (flatten (cdr x)))))))
+(set samefringe (lambda (x y) (equal (flatten x) (flatten y))))
+(set find-perm (lambda (l)
+    (find-val pred (permutations l) '())))
+(set append* (lambda (l)
+    (if (null? l) '() (append (car l) (append* (cdr l))))))
+(set filter (lambda (pred l)
+    (if (null? l) '()
+     (if (pred (car l)) (cons (car l) (filter pred (cdr l)))
+       (filter pred (cdr l))))))
+(set remove (lambda (item l)
+     (filter (lambda (x) (not (= x item))) l)))
+(set permutations (lambda (l)
+  (if (= (length l) 1) (list1 l)
+     (append* (mapcar (lambda (x) (mapcar (lambda (z) (cons x z))
+                                  (permutations (remove x l)))) l)))))
+(set p (permutations '(a b c)))
+(force p)
+'(Permutations of a b c)
+p
+(set pred (lambda (perm) (= (car perm) 2)))
+(set p (find-perm '(1 2 3 4)))
+(force p)
+p
+'(2 1 3 4)
+;
+(set ints (cons 0 (mapcar +1 ints)))
+(set powersof2 (cons 1 (mapcar double powersof2)))
+(set mapcar2 (lambda (f l1 l2)
+        (cons (f (car l1) (car l2))
+                (mapcar2 f (cdr l1) (cdr l2)))))
+(set posints (cdr ints))
+(set X (cons x0 (mapcar2 f X posints)))
+(set facs (cons 1 (mapcar2 * facs posints)))
+(cadddr facs)
+6
+; Section 5.4
+(set evalBoolexp (lambda (e a)
+     (if (symbol? e) (isTrue? e a)
+       (if (= (car e) 'not)
+               (not (evalBoolexp (cadr e) a))
+          (if (= (car e) 'or)
+                (or (evalBoolexp (cadr e) a)
+                      (evalBoolexp (caddr e) a))
+              (and (evalBoolexp (cadr e) a)
+                      (evalBoolexp (caddr e) a)))))))
+(set mapaddx (lambda (x l) ; add x to each list in l, then append to l
+     (append l (mapcar (lambda (y) (cons x y)) l))))
+(set gensubsets (lambda (l) ; create a list containing all sub-sets of l
+     (if (null? (cdr l)) (list2 l '())
+         (mapaddx (car l) (gensubsets (cdr l))))))
+(set variables (lambda (e) ; All variables occurring in e
+     (if (symbol? e) (cons e '())
+          (if (= (car e) 'not) (variables (cadr e))
+               (union (variables (cadr e)) (variables (caddr e)))))))
+(set assignments (lambda (e) (gensubsets (variables e))))
+(set isTrue? member?)
+(set findTruth (lambda (e alist)
+     ; Find if any assignment on alist satisfies e
+     (if (null? alist) '() ; No assignments left to try
+          (if (evalBoolexp e (car alist)) 'T
+               (findTruth e (cdr alist))))))
+(set SAT (lambda (e)
+     (if (findTruth e (assignments e))
+          'Satisfiable
+          'Unsatisfiable)))
+(SAT '(not (or p (and (or (not p) q) (or (not p) (not q))))))
+; Section 5.5
+(set add-points (lambda (p q)
+    (list2 (+ (car p) (car q)) (+ (cadr p) (cadr q)))))
+(set gen-paths (lambda (p points)
+    (cons p
+     (mapcar (lambda (r) (gen-paths r points))
+                   (mapcar (lambda (q) (add-points q p)) points)))))
+(set P '((2 2)(0 1)(3 0)))
+'((2 2)(0 1)(3 0))
+(set PATHS (gen-paths '(0 0) P))
+(set == (lambda (p q) (and (= (car p) (car q)) (= (cadr p) (cadr q)))))
+(set << (lambda (p q) (or (< (car p) (car q)) (< (cadr p) (cadr q)))))
+(set dfs (lambda (t pred term)
+     (if (pred (car t)) 'T  ; success
+          (if (term (car t)) '()  ; failure on this branch
+               (dfs* (cdr t) pred term)))))
+(set dfs* (lambda (l pred term)
+     (if (null? l) '() ; failure
+          (if (dfs (car l) pred term) 'T
+               (dfs* (cdr l) pred term)))))
+(set reaches-dfs (lambda (p0 paths)
+     (dfs paths
+            (lambda (q) (== p0 q))
+            (lambda (q) (<< p0 q)))))
+;
+(set enqueue* (lambda (q items)
+     (if (null? items) q (enqueue* (enqueue (car items) q) (cdr items)))))
+;
+(set bfs (lambda (t pred term)
+     (bfs-queue (enqueue t empty-queue) pred term)))
+(set bfs-queue (lambda (q pred term)
+     (if (empty? q) '()
+       (if (pred (car (front q))) 'T
+        (if (term (car (front q))) (bfs-queue (rm-front q) pred term)
+         (bfs-queue (enqueue* (rm-front q) (cdr (front q)))
+                    pred term))))))
+(set reaches-bfs (lambda (p0 paths)
+     (bfs paths
+            (lambda (q) (== p0 q))
+            (lambda (q) (<< p0 q)))))
+(reaches-dfs '(4 6) PATHS)
+'T
+(reaches-bfs '(4 3) PATHS)
+'()
+; Section 5.7
+;; The following is SCHEME code!!
+;(set find-val (lambda (pred str failure-value)
+;   (if (empty-stream? str) failure-value
+;     (if (pred (head str)) (head str)
+;       (find-val pred (tail str) failure-value)))))
+;(set if2 (lambda (pred x y) (if (pred x) x y)))
+;(set find-val (lambda (pred str failure-value)
+;   (if (empty-stream? str) failure-value
+;     (if2 pred (head str)
+;       (find-val pred (tail str) failure-value)))))
+;(set ones (cons 1 (lambda () ones)))
+;(1 <closure>)
+;(car ((cdr ones)))
+;1
+;(set flatten (lambda (l)
+;     (if (null? l) '()
+;         (if (atom? l) (list2 l (lambda () '()))
+;             (append-str (flatten (car l))
+;                         (lambda () (flatten (cdr l))))))))
+;(set append-str (lambda (s1 s2)
+;     (if (null? s1) (s2)
+;          (list2 (car s1) (lambda () (append-str ((cadr s1)) s2))))))
+;(set find-str (lambda (pred s)
+;     (if (null? s) '()
+;          (if (pred (car s)) (car s)
+;               (find-str pred ((cadr s)))))))
+;(set find-atom (lambda (pred l)
+;      (find-str pred (flatten l))))
+; Back to SASL
+; Section 5.8
+(set TRUE (lambda (t f) t))
+(set FALSE (lambda (t f) f))
+(set IF (lambda (c t f) (c t f)))
+(IF TRUE 'a 'b)
+'a
+(set EQ (lambda (x y) (if (= x y) TRUE FALSE)))
+(set fac (lambda (x) (IF (EQ x 0) 1 (* x (fac (- x 1))))))
+(fac 4)
+24
+(set AND (lambda (x y) (IF x y x)))
+(set CONS (lambda (a d) (lambda (f) (f a d FALSE))))
+(set NIL (lambda (f) (f NIL NIL TRUE)))
+(set CAR (lambda (l) (l (lambda (car cdr null?) car))))
+(set CDR (lambda (l) (l (lambda (car cdr null?) cdr))))
+(set NULL? (lambda (l) (l (lambda (car cdr null?) null?))))
+(set CADR (lambda (x) (CAR (CDR x))))
+(CADR (CONS 'abc (CONS 3 NIL)))
+3
+(set l1 (CONS 4 (CONS 5 (CONS 6 NIL))))
+(set +/ (lambda (l)
+       (IF (NULL? l) 0 (+ (CAR l) (+/ (CDR l))))))
+(+/ l1)
+15
+(set ZERO (lambda (f) (lambda (x) x)))
+(set ONE (lambda (f) (lambda (x) (f x))))
+(set TWO (lambda (f) (lambda (x) (f (f x)))))
+(set print-int (lambda (n) ((n +1) 0)))
+(print-int TWO)
+2
+(set +ONE (lambda (n) (lambda (g) (compose g (n g)))))
+(set PLUS (lambda (m n) (lambda (g) (compose (m g) (n g)))))
+(set THREE (PLUS ONE TWO))
+(print-int THREE)
+3
+(set MULT (lambda (m n) (compose m n)))
+(set SIX (MULT THREE TWO))
+(print-int SIX)
+6
+(set LIST2 (lambda (x y) (CONS x (CONS y NIL))))
+(set STEP (lambda (m-a) (LIST2 (CADR m-a) (+ONE (CADR m-a))))),
+(set -ONE (lambda (n) (CAR ((n STEP) (LIST2 ZERO ZERO)))))
+(set SUB (lambda (m n) ((n -ONE) m)))
+(set FOUR (SUB SIX TWO))
+(print-int FOUR)
+4
+(set GT (lambda (m n) (NOT (=ZERO? (SUB m n)))))
+(set GE (lambda (m n) (=ZERO? (SUB n m))))
+(set EQUAL (lambda (m n)
+   (AND (=ZERO? (SUB m n)) (=ZERO? (SUB n m)))))
+(set uncurry (lambda (f) (lambda (x y) ((f x) y))))
+(set F (curry FALSE))
+(set =ZERO? (lambda (n)
+     (uncurry (lambda (y) ((n F) (lambda (x) y))))))
+(IF (=ZERO? ZERO) 'yes 'no)
+'yes
+(IF (=ZERO? FOUR) 'yes 'no)
+'no
+(set fac (lambda (n)
+     (IF (EQUAL n ZERO) ONE (MULT n (fac (SUB n ONE))))))
+(print-int (fac FOUR))
+24
+(set FAC-STEP (lambda (x-y)
+     (LIST2 (-ONE (CAR x-y)) (MULT (CAR x-y) (CADR x-y)))))
+(set FAC (lambda (n) (CADR ((n FAC-STEP) (LIST2 n ONE)))))
+(print-int (FAC FOUR))
+24
+(set W (lambda (F) (lambda (f) (F (f f)))))
+(set Y (lambda (F) ((W F) (W F))))
+(set ONES (Y (lambda (ones) (CONS ONE ones))))
+(print-int (CAR (CDR (CDR ONES))))
+1
+(set FAC (Y (lambda (fac)
+     (lambda (n)
+          (IF (EQUAL n ZERO) ONE (MULT n (fac (SUB n ONE))))))))
+(print-int (FAC FOUR))
+24
+quit

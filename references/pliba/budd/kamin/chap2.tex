@@ -1,0 +1,351 @@
+\chapter{The Lisp Interpreter}
+
+The interpreter for Lisp differs only slightly from that of Chapter one.
+The reader/parser is modified so as to recognize quoted constants, 
+two new global variables ({\sf T} and {\sf nil}) are added, and a
+number of new value-ops are defined.  In all other respects it is the same.
+Figure~\ref{chap2hier} shows the class hierarchy for the expression classes
+added in chapter 2.
+
+\setlength{\unitlength}{5mm}
+\begin{figure}
+\begin{picture}(16,5)(-4,-3)
+\put(-3.5,0){\sf Expression}
+\put(0,0.2){\line(1,0){1}}
+\put(1,0){\sf Function}
+\put(0,0.2){\line(1,-1){1}}
+\put(1,-1){\sf QuotedConstant}
+\put(4,0.2){\line(1,0){1}}
+\put(5,0){\sf BinaryFunction}
+\put(4,0.2){\line(1,3){1}}
+\put(5,3){\sf UnaryFunction}
+\put(9.5,3.2){\line(1,0){1}}
+\put(10.5,3){\sf BooleanUnary}
+\put(9.5,0.2){\line(1,1){1}}
+\put(10.5,1){\sf IntegerBinaryFunction}
+\put(9.5,0.2){\line(1,-1){1}}
+\put(10.5,-1){\sf BooleanBinaryFunction}
+\end{picture}
+\caption{Classes added in Chapter Two}\label{chap2hier}
+\end{figure}
+
+\section{The Lisp reader}
+
+The Lisp reader is created by subclassing from the base class {\sf
+Reader} (Figure~\ref{lispreader}).  The only change is to modify the
+method {\sf readExpression} to check for leading quote marks.  If no mark
+is found, execution is as in the default case.  If a quote mark is found,
+the character pointer is advanced and the following expression is turned
+into a quoted constant.  Note that no checking is performed on this
+expression.  This permits symbols, even separators, to be treated as data.
+That is, '; is a quoted symbol, even though the semicolon itself is not a
+legal symbol.
+
+\begin{figure}
+\begin{cprog}
+class QuotedConst : public Expression {
+private:
+	Expr theValue;
+public:
+	QuotedConst(Expression * val)
+		{ theValue = val; }
+
+	virtual void free();
+	virtual void eval(Expr &, Environment *, Environment *);
+	virtual void print();
+};
+
+class LispReader : public Reader {
+protected:
+	virtual Expression * readExpression();
+};
+
+void QuotedConst::eval(Expr &target, Environment *, Environment *)
+{
+	target = theValue();
+}
+
+void QuotedConst::print()
+{
+	printf("'"); theValue()->print();
+}
+
+Expression * LispReader::readExpression()
+{
+	// if quoted constant, return it,
+	if ((*p == '\'') || (*p == '`')) {
+		p++;
+		return new QuotedConst(readExpression());
+		}
+	// otherwise simply return what we had before
+	return Reader::readExpression();
+}
+\end{cprog}
+\caption{The Lisp reader/parser}\label{lispreader}
+\end{figure}
+
+To create quoted constants it is necessary to introduce a new type of
+expression.  When an instance of class {\sf QuotedConst} is evaluated,
+it simply returns its (unevaluated) data value.
+
+\section{Value-ops}
+
+In addition to adding a number of new value-ops, the Lisp interpreter
+modifies the meaning of a few of the Chapter 1 functions.  For example
+the relational operators must now return the values {\sf T} or {\sf nil},
+and not 1 and 0 values.  Similarly the meaning of {\em true} and {\em false} 
+used by the {\sf if} and {\sf while} statements is changed.  Finally the 
+equality testing function ($=$) must now recognize both symbols and integers.
+
+\subsection{Relationals}
+
+Figure~\ref{equals} shows the revised definition of the equality testing
+function, which now must be prepared to handle symbols and well as
+integers.
+
+\begin{figure}
+\begin{cprog}
+class EqualFunction : public BinaryFunction {
+public:
+	virtual void applyWithArgs(Expr&, ListNode *, Environment *);
+};
+
+void EqualFunction::applyWithArgs(Expr& target, ListNode * args, 
+		Environment *rho)
+{
+	Expression * one = args->at(0);
+	Expression * two = args->at(1);
+
+	// true if both numbers and same number
+	IntegerExpression * ione = one->isInteger();
+	IntegerExpression * itwo = two->isInteger();
+	if (ione && itwo && (ione->val() == itwo->val())) {
+		target = true();
+		return;
+		}
+
+	// or both symbols and same symbol
+	Symbol * sone = one->isSymbol();
+	Symbol * stwo = two->isSymbol();
+	if (sone && stwo && (*sone == stwo)) {
+		target = true();
+		return;
+		}
+
+	// or both lists and both nil
+	ListNode * lone = one->isList();
+	ListNode * ltwo = two->isList();
+	if (lone && ltwo && lone->isNil() && ltwo->isNil()) {
+		target = true();
+		return;
+		}
+
+	// false otherwise
+	target = false();
+}
+\end{cprog}
+\caption{The revised Definition of the equality function}\label{equals}
+\end{figure}
+
+Implementation of the boolean binary functions is simplified by the
+introduction of a class {\sf BooleanBinaryFunction} (Figure~\ref{boolbin}).  
+This class decodes
+the two integer arguments and invokes a further method to determine the
+boolean result.  Based on this result either the value of the global symbol
+representing true or the symbol representing false is returned.
+
+\begin{figure}
+\begin{cprog}
+class BooleanBinaryFunction : public BinaryFunction {
+private:
+	int (*fun)(int, int);
+public:
+	BooleanBinaryFunction(int (*thefun)(int, int)) { fun = thefun; }
+	virtual void applyWithArgs(Expr&, ListNode*, Environment*);
+	virtual int value(int, int);
+};
+
+void BooleanBinaryFunction::applyWithArgs(Expr& target, ListNode* args, 
+	Environment* rho)
+{
+	Expression * left = args->at(0);
+	Expression * right = args->at(1);
+	if ((! left->isInteger()) || (! right->isInteger())) {
+		target = error("arithmetic function with nonint args");
+		return;
+		}
+	
+	if (value(left->isInteger()->val(), right->isInteger()->val())) 
+		target = true();
+	else 
+		target = false();
+}
+
+int LessThanFunction::value(int a, int b) { return a < b; }
+int GreaterThanFunction::value(int a, int b) { return a > b; }
+
+int isTrue(Expression * cond)
+{
+	// the only thing false is nil
+	ListNode *nval = cond->isList();
+	if (nval && nval->isNil())
+		return 0;
+	return 1;
+}
+\end{cprog}
+\caption{Returning boolean results from relationals}\label{boolbin}
+\end{figure}
+
+Finally Figure~\ref{boolbin} shows the revised function used by if and
+while statements to determine the truth or falsity of their condition.
+Unlike in Chapter 1, where 0 and 1 were used to represent true and false,
+here {\sf nil} is used as the only false value.
+
+\subsection{Car, Cdr and Cons}
+
+\begin{figure}
+\begin{cprog}
+void CarFunction(Expr & target, Expression * arg)
+{
+	ListNode * thelist = arg->isList();
+	if (! thelist) {
+		target = error("car applied to non list");
+		return;
+		}
+	target = thelist->head()->touch();
+}
+
+void CdrFunction(Expr & target, Expression * arg)
+{
+	ListNode * thelist = arg->isList();
+	if (! thelist) {
+		target = error("car applied to non list");
+		return;
+		}
+	target = thelist->tail()->touch();
+}
+
+void ConsFunction(Expr & target, Expression * left, Expression * right)
+{
+	target = new ListNode(left, right);
+}
+\end{cprog}
+\caption{Implementation of Car, Cdr and Cons}\label{car}
+\end{figure}
+
+Car and cdr are implemented as simple unary functions (Figure~\ref{car}),
+and cons is a simple binary function that creates a new {\sf ListNode} out
+of its two arguments.\footnote{A matter for debate is whether Cons should
+give an error if the second argument is not a list.  Real Lisp doesn't
+care; but also uses a different format for printing such lists.  Our
+interpreter prints such as lists exactly as if the second argument had been
+a list containing the element.}
+
+\subsection{Predicates}
+
+The implementation of the predicates {\sf number?}, {\sf symbol?}, {\sf
+list?} and {\sf null?} is simplified by the creation of a class {\sf
+BooleanUnary} (Figure~\ref{boolunary}), subclassing {\sf UnaryFunction}.  
+As with the integer functions implemented in chapter 1, instances of 
+{\sf BooleanUnary} maintain as part of their state a function that takes an
+expression and returns an integer (that is, boolean) value.
+Thus for each predicate it is only necessary to write a function which takes 
+the single argument and returns a true/false indication.
+
+\begin{figure}
+\begin{cprog}
+class BooleanUnary : public UnaryFunction {
+private:
+	int (*fun)(Expression *);
+public:
+	BooleanUnary(int (*thefun)(Expression *);
+	virtual void applyWithArgs(Expr& target, ListNode* args, Environment*);
+};
+
+void BooleanUnary::applyWithArgs(Expr & target, ListNode * args, Environment *)
+{
+	if (fun(args->head()))
+		target = true();
+	else
+		target = false();
+}
+
+int NumberpFunction(Expression * arg)
+{
+	return 0 != arg->isInteger();
+}
+
+int SymbolpFunction(Expression * arg)
+{
+	return 0 != arg->isSymbol();
+}
+
+int ListpFunction(Expression * arg)
+{
+	ListNode * x = arg->isList();
+	// list? doesn't return true on nil
+	if (x && x->isNil()) return 0;
+	if (x) return 1;
+	return 0;
+}
+
+int NullpFunction(Expression * arg)
+{
+	ListNode * x = arg->isList();
+	return x && x->isNil();
+}
+\end{cprog}
+\caption{The class Boolean Unary}\label{boolunary}
+\end{figure}
+
+\section{Initialization of the Lisp Interpreter}
+
+Figure~\ref{chap2init} shows the initialization method for the Lisp
+interpreter.
+
+\begin{figure}
+\begin{cprog}
+initialize()
+{
+
+	// create the reader/parser 
+	reader = new LispReader;
+
+	// initialize the global environment
+	Symbol * truesym = new Symbol("T");
+	true = truesym;
+	false = emptyList();
+	Environment * genv = globalEnvironment;
+	// make T evaluate to T always
+	genv->add(truesym, truesym);
+	genv->add(new Symbol("nil"), emptyList());
+
+	// initialize the commands environment
+	Environment * cmds = commands;
+	cmds->add(new Symbol("define"), new DefineStatement);
+
+	// initialize the value-ops environment
+	Environment * vo = valueOps;
+	vo->add(new Symbol("if"), new IfStatement);
+	vo->add(new Symbol("while"), new WhileStatement);
+	vo->add(new Symbol("set"), new SetStatement);
+	vo->add(new Symbol("begin"), new BeginStatement);
+	vo->add(new Symbol("+"), new IntegerBinaryFunction(PlusFunction));
+	vo->add(new Symbol("-"), new IntegerBinaryFunction(MinusFunction));
+	vo->add(new Symbol("*"), new IntegerBinaryFunction(TimesFunction));
+	vo->add(new Symbol("/"), new IntegerBinaryFunction(DivideFunction));
+	vo->add(new Symbol("="), new BinaryFunction(EqualFunction));
+	vo->add(new Symbol("<"), new BooleanBinaryFunction(LessThanFunction));
+	vo->add(new Symbol(">"), new BooleanBinaryFunction(GreaterThanFunction));
+	vo->add(new Symbol("cons"), new BinaryFunction(ConsFunction));
+	vo->add(new Symbol("car"), new UnaryFunction(CarFunction));
+	vo->add(new Symbol("cdr"), new UnaryFunction(CdrFunction));
+	vo->add(new Symbol("number?"), new BooleanUnary(NumberpFunction));
+	vo->add(new Symbol("symbol?"), new BooleanUnary(SymbolpFunction));
+	vo->add(new Symbol("list?"), new BooleanUnary(ListpFunction));
+	vo->add(new Symbol("null?"), new BooleanUnary(NullpFunction));
+	vo->add(new Symbol("print"), new UnaryFunction(PrintFunction));
+}
+\end{cprog}
+\caption{Initialization of the Lisp interpreter}\label{chap2init}
+\end{figure}

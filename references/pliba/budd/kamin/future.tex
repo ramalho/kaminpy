@@ -1,0 +1,35 @@
+\chapter*{Possible Future Changes}
+
+The following list represents a few of the ideas that occurred to me as I
+was developing these interpreters for how things might be done differently.
+These are presented in no particular order.  (Nor as any particularly grave
+criticism of the Kamin interpreters - I still think the book as a whole is
+very good).
+\begin{itemize}
+\item
+The C++ versions of the interpreters have an annoying habit of dumping 
+core when an error occurs.  Need to track this down and fix it.
+\item
+I would remove the while statement from the chapter 2 lisp interpreter.
+Students who do not have previous experience with Lisp often have a
+difficult time learning to program in a recursive fashion.  For them the
+while statement is a crutch, and without it they would be forced to use the
+more Lisp-like features of the language.
+\item
+I would add functionals (called operators in APL) to chapter 3.
+Specifically I would make reduction take the function as an argument, and
+add inner and outer product.  This would allow an easier transition to
+functional programming in the next section.
+\item
+I might be tempted to add a chapter before chapter 3 on Setl.  This is
+another example of a language using large values, and allows a new and
+different problem domain to be discussed (namely logic).
+\item
+It would be nice to add call/cc to the scheme interpreter, but I don't exactly 
+see how to do this right now.  
+This is not quite as critical now that the Prolog interpreter uses
+continuations for its execution.
+\item
+I would remove the keyword ``rep'' from the CLU syntax, as it is
+unnecessary and its elimination simplifies the implementation.
+\end{itemize}

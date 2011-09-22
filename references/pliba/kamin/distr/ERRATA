@@ -1,0 +1,64 @@
+These are errors in the first printing of "Programming Languages:
+An Interpreter-based Approach," by Sam Kamin, Addison-Wesley, 1990.
+Included are only the substantive errors, not simple typos or merely
+aesthetic corrections.  Errors in the second printing (a subset of
+those in first printing) are listed separately below.  (For reporting
+a number of these typos, thanks to: Tim Budd, Chris Van Wyk.)
+
+Errors in the table of contents and, especially, the index are too
+numerous to list.  The main problem in the index is that page numbers in
+the appendices are almost all too high, by an average of two pages.
+
+Read "->" as "should be changed to".  One case of this is `-> ""',
+which means "should be deleted".
+
+p. vi, "Overview" section, l. 1: "?" -> "1979"
+p. 14, l. -11: "FUNDEF" -> "f: FUNDEF"
+p. 32, l. -5: "Coli" -> "coli"
+p. 59, "Further reading" section, last line: "Reingold [1988]" ->
+  "Reingold and Reingold [1988]"
+p. 62, l. 2: "The interpreter" -> "The new version of the meta-circular
+  interpreter"
+p. 62, l. 5: "programmed in Exercise 10" -> ""
+p. 68, l. 8: "vector V," -> "vector V, where \oplus is any primitive
+  dyadic operation,"
+p. 71, l. -5: remove one closing parenthesis at end of line
+p. 98, l. 10: "(page 15)" -> "(page 13)"
+p. 110, section 4.3, l. 1: "??" -> "C"
+p. 125, last line of text: "e2) e1)" -> "e2)) e1)"
+p. 126, line "(sum (f (car l)) (loop (cdr l))...)": delete three closing
+  parentheses
+p. 139, l. -14, -12, -10: on each line, second arrow show be star,
+  e.g. l. -10: -> (int \arrow bool) * int list \arrow bool
+p. 148, para. 2, l. 3: "Sethi [1988]" -> "Sethi [1989]"
+p. 149, l. -5: "(gcd 3 5)" -> "(gcd 9 11)"
+p. 156, l. 6: "(find-val pred (cdr ilis))))" -> "(find-val pred (cdr ilis)
+  (+1 100))))"
+p. 162, l. -3 (of text): "a_i" -> "x_i"
+p. 176, l. 11: "subsets" -> "gensubsets" (twice)
+p. 177, l. 13: "find" -> "find-val"
+p. 182, l. 3-6: "CADR" -> "CAR"
+p. 186, l. 9: "(f x y)" -> "e"
+p. 199, para. 2, l. -3: "In fact" -> "Furthermore, if we restore the
+  restriction that the path remain entirely within the first quadrant"
+p. 285, l. -15: "List" -> "SequenceableCollection"
+p. 311, l. -11: "(release-terminal THELAB self)" -> "(release-terminal
+             THELAB status)"
+p. 345, l. 6: "(from:to:by: n n+km k)" -> "(from:to:by: n n+km m)"
+p. 417, second box: "ALLOC 2,rv" -> "ALLOC 2"
+p. 550, l. -12: "ord(op)" -> "ord(op)+1"
+p. 563, l. -17: "ord(op)" -> "ord(op)+1"
+p. 616, middle: "[1988] R. Sethi" -> "[1989] R. Sethi"
+
+Errors in second printing (that is, errors that weren't caught
+before the second printing).  This list is a subset of the list above:
+
+p. 98:  l. 10: "page 15" -> "page 13"
+        lines -9, -8 use a notation for vector x that's only defined on p. 254
+p. 156: l. 6: "(find-val pred (cdr ilis))" ->
+                  "(find-val pred (cdr ilis) (+1 100))"
+p. 163: l. 9: "page 33" -> "page 31"
+p. 176, l. 11: "subsets" -> "gensubsets"
+p. 285, l. -15: "List" -> "SequenceableCollection"
+p. 311, l. -11: "(release-terminal THELAB self)" -> "(release-terminal
+             THELAB status)"
