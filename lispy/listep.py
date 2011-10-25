@@ -28,14 +28,16 @@ class UnexpectedRightParen(ParseError):
     """Unexpected )"""
 
 def tokenize(source_code):
-    "Convert a string into a list of tokens."
+    """Convert a string into a list of tokens."""
     return source_code.replace('(',' ( ').replace(')',' ) ').split()
 
 def parse(source_code):
+    """Convert a string into expressions represented as (nested) lists."""
     tokens = tokenize(source_code)
     return read(tokens)
 
 def read(tokens):
+    """Recursively read tokens building nested expressions"""
     if len(tokens) == 0:
         raise UnexpectedEndOfInput()
     token = tokens.pop(0)
@@ -58,11 +60,18 @@ def read(tokens):
 
 
 operators = {
-    '+': op.add
+    '+': op.add,
+    '*': op.mul,
 }
 
 def evaluate(expression):
+    """Calculate the value of an expression"""
     if isinstance(expression, int):
         return expression
-    elif expression in operators: # operator
+    elif isinstance(expression, str): # operator
         return operators[expression]
+    else:
+        exps = [evaluate(exp) for exp in expression]
+        operator = exps.pop(0)
+        return operator(*exps)
+

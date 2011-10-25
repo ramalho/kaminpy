@@ -51,5 +51,8 @@ def test_eval_op():
     import operator
     eq_(evaluate(parse('+')), operator.add)
 
-#def test_eval_numexp():
-#    eq_(evaluate(parse('(+ 2 3)')), 5)
+def test_eval_numexp():
+    eq_(evaluate(parse('(+ 2 3)')), 5)
+
+def test_eval_numexp_inner():
+    eq_(evaluate(parse('(+ 2 (* 3 4))')), 14)
