@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from nose.tools import eq_
+from nose.tools import eq_, raises, assert_raises
 
 from listep import *
 
@@ -22,3 +22,25 @@ def test_parse_numexp():
 
 def test_parse_numexp_inner():
     eq_(parse('(+ 2 (* 3 4))'), ['+', 2, ['*', 3, 4]])
+
+def test_parse_empty_paren():
+    eq_(parse('()'), [])
+
+@raises(UnexpectedEndOfInput)
+def test_parse_empty():
+    parse('')
+
+@raises(UnexpectedRightParen)
+def test_parse_right_paren():
+    parse(')')
+
+@raises(UnexpectedEndOfInput)
+def test_parse_open_paren():
+    parse('(')
+
+def test_parse_right_paren2():
+    try:
+        parse(')')
+    except UnexpectedRightParen as urp:
+        eq_(str(urp), 'Unexpected )')
+
