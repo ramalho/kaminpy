@@ -42,7 +42,7 @@ def test_parse_right_paren_detail():
     try:
         parse(')')
     except UnexpectedRightParen as exc:
-        eq_(str(exc), 'Unexpected )')
+        eq_(str(exc), 'unexpected )')
 
 def test_parse_plus_one():
     eq_(parse('(++ 2)'), ['++', 2])
@@ -72,7 +72,7 @@ def test_eval_no_operator_detail():
     try:
         evaluate(parse('(2 3)'))
     except InvalidOperator as exc:
-        eq_(str(exc), "Invalid operator: 2")
+        eq_(str(exc), "invalid operator: 2")
 
 def test_eval_sub():
     eq_(evaluate(parse('(- 2 3)')), -1)

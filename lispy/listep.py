@@ -14,24 +14,27 @@ The original source code of lis.py is at [2]
 
 import operator as op
 
-class InputError(Exception):
-    """Generic syntax error"""
+class InputError(StandardError):
+    """generic syntax error"""
     def __init__(self, value=None):
         self.value = value
     def __str__(self):
         msg = self.__class__.__doc__
-        if self.value:
+        if self.value is not None:
             return msg + ': ' + repr(self.value)
         return msg
 
 class UnexpectedEndOfInput(InputError):
-    """Unexpected end of input"""
+    """unexpected end of input"""
 
 class UnexpectedRightParen(InputError):
-    """Unexpected )"""
+    """unexpected )"""
 
 class InvalidOperator(InputError):
-    """Invalid operator"""
+    """invalid operator"""
+
+class EmptyExpression(InputError):
+    """empty expression"""
 
 def tokenize(source_code):
     """Convert a string into a list of tokens."""
@@ -54,6 +57,8 @@ def read(tokens):
             raise UnexpectedEndOfInput()
         while tokens[0] != ')':
             parsed.append(read(tokens))
+            if len(tokens) == 0:
+                raise UnexpectedEndOfInput()
         tokens.pop(0) # pop off ')'
         return parsed
     elif token == ')':
@@ -79,19 +84,32 @@ def evaluate(expression):
     if isinstance(expression, int):
         return expression
     elif isinstance(expression, str): # operator
-        return operators[expression]
+        try:
+            return operators[expression]
+        except KeyError:
+            raise InvalidOperator(expression)
     else:
         exps = [evaluate(exp) for exp in expression]
+        if len(exps) == 0:
+            raise EmptyExpression()
         operator = exps.pop(0)
-        if not callable(operator):
+        if callable(operator):
+            return operator(*exps)
+        else:
             raise InvalidOperator(operator)
-        return operator(*exps)
 
 def repl(prompt='> '):
     """A read-eval-print loop."""
     while True:
-        value = evaluate(parse(raw_input(prompt)))
-        print value
+        try:
+            value = evaluate(parse(raw_input(prompt)))
+        except (InputError, TypeError, ZeroDivisionError) as exc:
+            print '! ' + str(exc) 
+        except KeyboardInterrupt:
+            print
+            raise SystemExit
+        else:
+            print value
 
 if __name__=='__main__':
     repl()
