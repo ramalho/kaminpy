@@ -47,3 +47,9 @@ def test_parse_right_paren2():
 def test_eval_int():
     eq_(evaluate(parse('3')), 3)
 
+def test_eval_op():
+    import operator
+    eq_(evaluate(parse('+')), operator.add)
+
+#def test_eval_numexp():
+#    eq_(evaluate(parse('(+ 2 3)')), 5)

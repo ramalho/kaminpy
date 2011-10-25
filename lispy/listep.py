@@ -12,6 +12,8 @@ The original source code of lis.py is at [2]
 [2] http://norvig.com/lis.py
 '''
 
+import operator as op
+
 class ParseError(Exception):
     """Generic syntax error"""
     def __init__(self, msg=None):
@@ -54,6 +56,13 @@ def read(tokens):
         except ValueError:
             return token
 
+
+operators = {
+    '+': op.add
+}
+
 def evaluate(expression):
     if isinstance(expression, int):
         return expression
+    elif expression in operators: # operator
+        return operators[expression]
