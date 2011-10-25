@@ -54,3 +54,6 @@ def read(tokens):
         except ValueError:
             return token
 
+def evaluate(expression):
+    if isinstance(expression, int):
+        return expression

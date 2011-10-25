@@ -44,3 +44,6 @@ def test_parse_right_paren2():
     except UnexpectedRightParen as urp:
         eq_(str(urp), 'Unexpected )')
 
+def test_eval_int():
+    eq_(evaluate(parse('3')), 3)
+
