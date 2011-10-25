@@ -69,6 +69,9 @@ operators = {
     '-': op.sub,
     '*': op.mul,
     '/': op.div,
+    '**': op.pow,
+    'abs': abs,
+    '++': lambda x: x+1
 }
 
 def evaluate(expression):

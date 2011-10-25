@@ -44,6 +44,9 @@ def test_parse_right_paren_detail():
     except UnexpectedRightParen as exc:
         eq_(str(exc), 'Unexpected )')
 
+def test_parse_plus_one():
+    eq_(parse('(++ 2)'), ['++', 2])
+
 def test_eval_int():
     eq_(evaluate(parse('3')), 3)
 
@@ -84,3 +87,11 @@ def test_eval_div_returns_int():
 def test_eval_div_by_zero():
     evaluate(parse('(/ 6 0)'))
 
+def test_eval_pow():
+    eq_(evaluate(parse('(** 2 10)')), 1024)
+
+def test_eval_abs():
+    eq_(evaluate(parse('(abs -2)')), 2)
+
+def test_eval_plus_one():
+    eq_(evaluate(parse('(++ 2)')), 3)
