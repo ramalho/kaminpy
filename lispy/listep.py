@@ -86,3 +86,12 @@ def evaluate(expression):
         if not callable(operator):
             raise InvalidOperator(operator)
         return operator(*exps)
+
+def repl(prompt='> '):
+    """A read-eval-print loop."""
+    while True:
+        value = evaluate(parse(raw_input(prompt)))
+        print value
+
+if __name__=='__main__':
+    repl()
