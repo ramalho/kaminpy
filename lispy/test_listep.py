@@ -38,11 +38,11 @@ def test_parse_right_paren():
 def test_parse_open_paren():
     parse('(')
 
-def test_parse_right_paren2():
+def test_parse_right_paren_detail():
     try:
         parse(')')
-    except UnexpectedRightParen as urp:
-        eq_(str(urp), 'Unexpected )')
+    except UnexpectedRightParen as exc:
+        eq_(str(exc), 'Unexpected )')
 
 def test_eval_int():
     eq_(evaluate(parse('3')), 3)
@@ -56,3 +56,31 @@ def test_eval_numexp():
 
 def test_eval_numexp_inner():
     eq_(evaluate(parse('(+ 2 (* 3 4))')), 14)
+
+@raises(InvalidOperator)
+def test_eval_no_operator():
+    evaluate(parse('(2)'))
+
+@raises(InvalidOperator)
+def test_eval_no_operator2():
+    evaluate(parse('(2 3)'))
+
+def test_eval_no_operator_detail():
+    try:
+        evaluate(parse('(2 3)'))
+    except InvalidOperator as exc:
+        eq_(str(exc), "Invalid operator: 2")
+
+def test_eval_sub():
+    eq_(evaluate(parse('(- 2 3)')), -1)
+
+def test_eval_div():
+    eq_(evaluate(parse('(/ 6 2)')), 3)
+
+def test_eval_div_returns_int():
+    eq_(evaluate(parse('(/ 6 4)')), 1)
+
+@raises(ZeroDivisionError)
+def test_eval_div_by_zero():
+    evaluate(parse('(/ 6 0)'))
+

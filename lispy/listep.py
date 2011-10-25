@@ -14,18 +14,24 @@ The original source code of lis.py is at [2]
 
 import operator as op
 
-class ParseError(Exception):
+class InputError(Exception):
     """Generic syntax error"""
-    def __init__(self, msg=None):
-        self.msg = msg if msg else self.__class__.__doc__
+    def __init__(self, value=None):
+        self.value = value
     def __str__(self):
-        return str(self.msg)
+        msg = self.__class__.__doc__
+        if self.value:
+            return msg + ': ' + repr(self.value)
+        return msg
 
-class UnexpectedEndOfInput(ParseError):
+class UnexpectedEndOfInput(InputError):
     """Unexpected end of input"""
 
-class UnexpectedRightParen(ParseError):
+class UnexpectedRightParen(InputError):
     """Unexpected )"""
+
+class InvalidOperator(InputError):
+    """Invalid operator"""
 
 def tokenize(source_code):
     """Convert a string into a list of tokens."""
@@ -58,10 +64,11 @@ def read(tokens):
         except ValueError:
             return token
 
-
 operators = {
     '+': op.add,
+    '-': op.sub,
     '*': op.mul,
+    '/': op.div,
 }
 
 def evaluate(expression):
@@ -73,5 +80,6 @@ def evaluate(expression):
     else:
         exps = [evaluate(exp) for exp in expression]
         operator = exps.pop(0)
+        if not callable(operator):
+            raise InvalidOperator(operator)
         return operator(*exps)
-
