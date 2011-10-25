@@ -16,3 +16,9 @@ def test_tokenize_call_with_call():
 
 def test_parse_number():
     eq_(parse('3'), 3)
+
+def test_parse_numexp():
+    eq_(parse('(+ 2 3)'), ['+', 2, 3])
+
+def test_parse_numexp_inner():
+    eq_(parse('(+ 2 (* 3 4))'), ['+', 2, ['*', 3, 4]])

@@ -18,5 +18,19 @@ def tokenize(source_code):
 
 def parse(source_code):
     tokens = tokenize(source_code)
-    return int(tokens[0])
+    return read(tokens)
+
+def read(tokens):
+    token = tokens.pop(0)
+    if token == '(':
+        parsed = []
+        while tokens[0] != ')':
+            parsed.append(read(tokens))
+        tokens.pop(0) # pop off ')'
+        return parsed
+    else:
+        try:
+            return int(token)
+        except ValueError:
+            return token
 
