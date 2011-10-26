@@ -40,3 +40,23 @@ def test_begin_print_log():
         output), 30)
     eq_(output.getvalue(), '10\n20\n30\n')
 
+@raises(TooManyArguments)
+def test_if_too_many_args():
+    evaluate(parse('(if 1 2 3 4)'))
+
+@raises(MissingArguments)
+def test_if_too_few_args():
+    evaluate(parse('(if 1 2)'))
+
+@raises(TooManyArguments)
+def test_print_too_many_args():
+    evaluate(parse('(print 1 2)'))
+
+@raises(MissingArguments)
+def test_print_too_few_args():
+    evaluate(parse('(print)'))
+
+@raises(MissingArguments)
+def test_begin_empty():
+    evaluate(parse('(begin)'))
+

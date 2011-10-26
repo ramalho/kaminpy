@@ -23,6 +23,7 @@ BNF of this mini-language:
 import operator as op
 import re
 import sys
+import inspect
 
 REGEX_INTEGER = re.compile(r'-?\d+$')
 
@@ -107,6 +108,38 @@ operators = {
     '>': lambda a, b: 1 if a > b else 0,
 }
 
+class Command(object):
+    def check_args(self, args):
+        fixed_args, var_args = inspect.getargspec(self.__call__)[:2]
+        min_args = max_args = len(fixed_args[2:]) # self and output dont count
+        if var_args is None and len(args) > max_args:
+            raise TooManyArguments()
+        elif len(args) < min_args:
+            raise MissingArguments()
+
+class If(Command):
+    def __call__(self, output, test, conseq, alt):
+        result = conseq if evaluate(test, output) else alt
+        return evaluate(result, output)
+
+class Print(Command):
+    def __call__(self, output, arg):
+        result = evaluate(arg, output)
+        output.write('%s\n' % result)
+        return result
+
+class Begin(Command):
+    def __call__(self, output, first, *rest):
+        for exp in (first,)+rest:
+            result = evaluate(exp, output)
+        return result
+
+commands = {
+    'if': If(),
+    'print': Print(),
+    'begin': Begin(),
+}
+
 def evaluate(expression, output=sys.stdout):
     """Calculate the value of an expression"""
     if isinstance(expression, int):
@@ -116,19 +149,11 @@ def evaluate(expression, output=sys.stdout):
             return operators[expression]
         except KeyError:
             raise InvalidOperator(expression)
-    elif expression[0] == 'if':
-        (_, test, conseq, alt) = expression
-        result = conseq if evaluate(test, output) else alt
-        return evaluate(result, output)
-    elif expression[0] == 'print':
-        (_, argument) = expression
-        result = evaluate(argument, output)
-        output.write('%s\n' % result)
-        return result
-    elif expression[0] == 'begin':
-        for exp in expression[1:]:
-            result = evaluate(exp, output)
-        return result
+    elif expression[0] in commands:
+        command = commands[expression[0]]
+        args = expression[1:]
+        command.check_args(args)
+        return command(output, *args)
     else: # apply operator
         exps = [evaluate(exp, output) for exp in expression]
         if len(exps) == 0:
