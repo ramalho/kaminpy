@@ -118,14 +118,19 @@ def evaluate(expression, output=sys.stdout):
             raise InvalidOperator(expression)
     elif expression[0] == 'if':
         (_, test, conseq, alt) = expression
-        return evaluate(conseq if evaluate(test) else alt)
+        result = conseq if evaluate(test, output) else alt
+        return evaluate(result, output)
     elif expression[0] == 'print':
         (_, argument) = expression
-        result = evaluate(argument)
+        result = evaluate(argument, output)
         output.write('%s\n' % result)
         return result
+    elif expression[0] == 'begin':
+        for exp in expression[1:]:
+            result = evaluate(exp, output)
+        return result
     else: # apply operator
-        exps = [evaluate(exp) for exp in expression]
+        exps = [evaluate(exp, output) for exp in expression]
         if len(exps) == 0:
             raise NullExpression()
         operator = exps.pop(0)
@@ -147,7 +152,7 @@ def repl(prompt='> '):
     """A read-eval-print loop"""
     while True:
         try:
-            value = evaluate(parse(raw_input(prompt)))
+            value = evaluate(parse(raw_input(prompt)), output)
         except (InterpreterError, ZeroDivisionError) as exc:
             print('! ' + str(exc))
         except KeyboardInterrupt:
