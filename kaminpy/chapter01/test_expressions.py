@@ -123,3 +123,11 @@ def test_eval_gt_false_2():
 @raises(InvalidOperator)
 def test_plus_number():
     print evaluate(parse('+1'))
+
+@raises(MissingArguments)
+def test_eval_too_few_args():
+    evaluate(parse('(* 1)'))
+
+@raises(TooManyArguments)
+def test_eval_too_many_args():
+    evaluate(parse('(* 1 2 3)'))

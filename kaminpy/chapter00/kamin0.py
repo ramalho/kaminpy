@@ -5,7 +5,7 @@
 This is a simple arithmetic expression interpreter very much inspired
 by Peter Norvig's lis.py [1]. It implements the arithmetic expression
 subset of the language described in Chapter 1 of Samuel Kamin's book
-Programming Languages book [2]. 
+Programming Languages book [2].
 
 [1] http://norvig.com/lispy.html
 [2] Samuel Kamin, "Programming Languages, An Interpreter-Based Approach",
@@ -16,7 +16,7 @@ BNF of this mini-language:
 <expression> ::= <integer>
                | `(` <value-op> <expression>* `)`
 <value-op>   ::= `+` | `-` | `*` | `/` | `=` | `<` | `>`
-<integer>    ::= sequence of digits, possibly preceded by minus sign 
+<integer>    ::= sequence of digits, possibly preceded by minus sign
 
 '''
 
@@ -25,8 +25,8 @@ import re
 
 REGEX_INTEGER = re.compile(r'-?\d+$')
 
-class InputError(StandardError):
-    """generic syntax error"""
+class InterpreterError(StandardError):
+    """generic interpreter error"""
     def __init__(self, value=None):
         self.value = value
     def __str__(self):
@@ -35,29 +35,41 @@ class InputError(StandardError):
             return msg + ': ' + repr(self.value)
         return msg
 
+class InputError(InterpreterError):
+    """generic parsing error"""
+
 class UnexpectedEndOfInput(InputError):
     """unexpected end of input"""
 
 class UnexpectedRightParen(InputError):
     """unexpected )"""
 
-class InvalidOperator(InputError):
+class EvaluationError(InterpreterError):
+    """generic evaluation error"""
+
+class InvalidOperator(EvaluationError):
     """invalid operator"""
 
-class EmptyExpression(InputError):
-    """empty expression"""
+class NullExpression(EvaluationError):
+    """null expression"""
+
+class MissingArguments(EvaluationError):
+    """missing arguments"""
+
+class TooManyArguments(EvaluationError):
+    """too many arguments"""
 
 def tokenize(source_code):
     """Convert a string into a list of tokens."""
     return source_code.replace('(',' ( ').replace(')',' ) ').split()
 
 def parse(source_code):
-    """Convert a string into expressions represented as (nested) lists."""
+    """Convert a string into expressions represented as (nested) lists"""
     tokens = tokenize(source_code)
     return read(tokens)
 
 def read(tokens):
-    """Recursively read tokens building nested expressions"""
+    """Read tokens building recursively nested expressions"""
     if len(tokens) == 0:
         raise UnexpectedEndOfInput()
     token = tokens.pop(0)
@@ -106,20 +118,29 @@ def evaluate(expression):
     else:
         exps = [evaluate(exp) for exp in expression]
         if len(exps) == 0:
-            raise EmptyExpression()
+            raise NullExpression()
         operator = exps.pop(0)
         if callable(operator):
-            return operator(*exps)
+            try:
+                arg1, arg2 = exps
+            except ValueError as exc:
+                if exc.message.startswith('need more'):
+                    raise MissingArguments()
+                elif exc.message.startswith('too many'):
+                    raise TooManyArguments()
+                else:
+                    raise
+            return operator(arg1, arg2)
         else:
             raise InvalidOperator(operator)
 
 def repl(prompt='> '):
-    """A read-eval-print loop."""
+    """A read-eval-print loop"""
     while True:
         try:
             value = evaluate(parse(raw_input(prompt)))
-        except (InputError, TypeError, ZeroDivisionError) as exc:
-            print('! ' + str(exc)) 
+        except (InterpreterError, ZeroDivisionError) as exc:
+            print('! ' + str(exc))
         except KeyboardInterrupt:
             print()
             raise SystemExit
