@@ -8,7 +8,7 @@ from kamin1 import *
 def setup():
     global evaluate
     eva = Evaluator()
-    evaluate = eva.evaluate
+    evaluate = lambda exp: eva.evaluate({}, exp)
 
 def test_tokenize_atom():
     eq_(tokenize('3'), ['3'])
@@ -127,7 +127,7 @@ def test_eval_gt_false():
 def test_eval_gt_false_2():
     eq_(evaluate(parse('(> 3 4)')), 0)
 
-@raises(InvalidOperator)
+@raises(UnknownIdentifier)
 def test_plus_number():
     print evaluate(parse('+1'))
 
@@ -138,3 +138,9 @@ def test_eval_too_few_args():
 @raises(TooManyArguments)
 def test_eval_too_many_args():
     evaluate(parse('(* 1 2 3)'))
+
+def test_eval_local_symbol():
+    eva = Evaluator()
+    local_env = {'x':3}
+    eq_(eva.evaluate(local_env, 'x'), 3)
+

@@ -17,8 +17,11 @@ BNF of this mini-language (so far):
                | `(` `if` <expression1>  <expression2> <expression3> `)`
                | `(` `print` <expression> `)`
                | `(` `begin` <expression>+ `)`
+               | `(` `set` <identifier> <expression>`)`
 <value-op>   ::= `+` | `-` | `*` | `/` | `=` | `<` | `>`
 <integer>    ::= sequence of digits, possibly preceded by minus sign
+<identifier> ::= any sequence of characters not an integer, and not
+                 containing a blank or `(`, `)`, `;`
 
 '''
 
@@ -55,6 +58,9 @@ class MissingArguments(InterpreterError):
 
 class TooManyArguments(InterpreterError):
     """too many arguments"""
+
+class UnknownIdentifier(InterpreterError):
+    """unknown identifier"""
 
 def tokenize(source_code):
     """Convert a string into a list of tokens"""
@@ -105,18 +111,6 @@ def check_args(function, args, skip_params=None):
     elif len(args) > max_args and var_args is None:
         raise TooManyArguments()
 
-# use lambdas and not the operator module because inspect.getargspec 
-# only works with functions defined in Python
-operators = { 
-    '+': lambda *a: sum(a), 
-    '-': lambda a, b: a - b, 
-    '*': lambda a, b: a * b, 
-    '/': lambda a, b: a / b, 
-    '=': lambda a, b: 1 if a == b else 0,
-    '<': lambda a, b: 1 if a < b else 0,
-    '>': lambda a, b: 1 if a > b else 0,
-}
-
 class Evaluator(object):
 
     def __init__(self):
@@ -125,23 +119,33 @@ class Evaluator(object):
             if name.endswith('_cmd'):
                 self.commands[name[:-4]] = getattr(self, name)
 
-    def evaluate(self, expression):
+        # use lambdas and not the operator module because inspect.getargspec 
+        # only works with functions defined in Python
+        operators = {
+            '+': lambda *a: sum(a), 
+            '-': lambda a, b: a - b, 
+            '*': lambda a, b: a * b, 
+            '/': lambda a, b: a / b, 
+            '=': lambda a, b: 1 if a == b else 0,
+            '<': lambda a, b: 1 if a < b else 0,
+            '>': lambda a, b: 1 if a > b else 0,
+        }
+        self.global_env = operators.copy()
+
+    def evaluate(self, local_env, expression):
         """Calculate the value of an expression"""
         if isinstance(expression, int):
             return expression
-        elif isinstance(expression, str): # operator
-            try:
-                return operators[expression]
-            except KeyError:
-                raise InvalidOperator(expression)
+        elif isinstance(expression, str): # symbol
+            return self.get(local_env, expression)
         elif expression[0] in self.commands:
             # special forms evaluate (or not) their args
             command = self.commands[expression.pop(0)]
-            check_args(command, expression, ['self'])
-            return command(*expression)
+            check_args(command, expression, ['self', 'local_env'])
+            return command(local_env, *expression)
         else: 
             # evaluate operator and args
-            exps = [self.evaluate(exp) for exp in expression]
+            exps = [self.evaluate(local_env, exp) for exp in expression]
             if len(exps) == 0:
                 raise NullExpression()
             operator = exps.pop(0)
@@ -151,21 +155,30 @@ class Evaluator(object):
             else:
                 raise InvalidOperator(operator)
 
+    def get(self, local_env, name):
+        if name in local_env:
+            return local_env[name]
+        elif name in self.global_env:
+            return self.global_env[name]
+        else:
+            raise UnknownIdentifier(name)
+
+
     #######################################################################
     # commands of the language
 
-    def if_cmd(self, test, conseq, alt):
-        result = conseq if self.evaluate(test) else alt
-        return self.evaluate(result)
+    def if_cmd(self, local_env, test, conseq, alt):
+        result = conseq if self.evaluate(local_env, test) else alt
+        return self.evaluate(local_env, result)
 
-    def print_cmd(self, arg):
-        result = self.evaluate(arg)
+    def print_cmd(self, local_env, arg):
+        result = self.evaluate(local_env, arg)
         print(result)
         return result
 
-    def begin_cmd(self, first, *rest):
+    def begin_cmd(self, local_env, first, *rest):
         for exp in (first,)+rest:
-            result = self.evaluate(exp)
+            result = self.evaluate(local_env, exp)
         return result
 
     #######################################################################

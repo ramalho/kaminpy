@@ -10,7 +10,7 @@ from kamin1 import *
 def setup():
     global evaluate
     eva = Evaluator()
-    evaluate = eva.evaluate
+    evaluate = lambda exp: eva.evaluate({}, exp)
 
 def test_eval_if_true():
     eq_(evaluate(parse('(if 1 2 3)')), 2)
@@ -80,4 +80,5 @@ def test_print_too_few_args():
 def test_begin_empty():
     evaluate(parse('(begin)'))
 
+#def test_environment():
 
