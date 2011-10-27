@@ -181,6 +181,11 @@ class Evaluator(object):
             result = self.evaluate(local_env, exp)
         return result
 
+    def set_cmd(self, local_env, identifier, expression):
+        value = self.evaluate(local_env, expression)
+        local_env[identifier] = value
+        return value
+
     #######################################################################
 
 

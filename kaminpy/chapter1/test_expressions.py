@@ -144,3 +144,8 @@ def test_eval_local_symbol():
     local_env = {'x':3}
     eq_(eva.evaluate(local_env, 'x'), 3)
 
+def test_eval_local_set():
+    eva = Evaluator()
+    local_env = {'x': 3}
+    eq_(eva.evaluate(local_env, '(set x 7)'), 7)
+    eq_(local_env['x'], 7)
