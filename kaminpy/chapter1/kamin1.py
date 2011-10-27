@@ -11,10 +11,13 @@ Programming Languages book [2].
 [2] Samuel Kamin, "Programming Languages, An Interpreter-Based Approach",
     Addison-Wesley, Reading, MA, 1990. ISBN 0-201-06824-9.
 
-BNF of this mini-language:
+BNF of this mini-language (so far):
 
 <expression> ::= <integer>
-               | `(` <value-op> <expression>* `)`
+               | `(` <value-op> <expression1>  <expression2> `)`
+               | `(` `if` <expression1>  <expression2> <expression3> `)`
+               | `(` `print` <expression> `)`
+               | `(` `begin` <expression>+ `)`
 <value-op>   ::= `+` | `-` | `*` | `/` | `=` | `<` | `>`
 <integer>    ::= sequence of digits, possibly preceded by minus sign
 
@@ -37,28 +40,22 @@ class InterpreterError(StandardError):
             return msg + ': ' + repr(self.value)
         return msg
 
-class InputError(InterpreterError):
-    """generic parsing error"""
-
-class UnexpectedEndOfInput(InputError):
+class UnexpectedEndOfInput(InterpreterError):
     """unexpected end of input"""
 
-class UnexpectedRightParen(InputError):
+class UnexpectedRightParen(InterpreterError):
     """unexpected )"""
 
-class EvaluationError(InterpreterError):
-    """generic evaluation error"""
-
-class InvalidOperator(EvaluationError):
+class InvalidOperator(InterpreterError):
     """invalid operator"""
 
-class NullExpression(EvaluationError):
+class NullExpression(InterpreterError):
     """null expression"""
 
-class MissingArguments(EvaluationError):
+class MissingArguments(InterpreterError):
     """missing arguments"""
 
-class TooManyArguments(EvaluationError):
+class TooManyArguments(InterpreterError):
     """too many arguments"""
 
 def tokenize(source_code):
@@ -66,7 +63,7 @@ def tokenize(source_code):
     return source_code.replace('(',' ( ').replace(')',' ) ').split()
 
 def parse(source_code):
-    """Convert a string into expressions represented as (nested) lists"""
+    """Convert a string into expressions represented as nested lists"""
     tokens = tokenize(source_code)
     return read(tokens)
 
@@ -110,24 +107,24 @@ operators = {
 
 def check_args(function, args):
     fixed_args, var_args = inspect.getargspec(function)[:2]
-    min_args = max_args = len(fixed_args[1:]) # output arg doesn't count
-    if var_args is None and len(args) > max_args:
-        raise TooManyArguments()
-    elif len(args) < min_args:
+    min_args = max_args = len(fixed_args)
+    if len(args) < min_args:
         raise MissingArguments()
+    elif len(args) > max_args and var_args is None:
+        raise TooManyArguments()
 
-def if_cmd(output, test, conseq, alt):
-    result = conseq if evaluate(test, output) else alt
-    return evaluate(result, output)
+def if_cmd(test, conseq, alt):
+    result = conseq if evaluate(test) else alt
+    return evaluate(result)
 
-def print_cmd(output, arg):
-    result = evaluate(arg, output)
-    output.write('%s\n' % result)
+def print_cmd(arg):
+    result = evaluate(arg)
+    print(result)
     return result
 
-def begin_cmd(output, first, *rest):
+def begin_cmd(first, *rest):
     for exp in (first,)+rest:
-        result = evaluate(exp, output)
+        result = evaluate(exp)
     return result
 
 commands = {
@@ -136,7 +133,7 @@ commands = {
     'begin': begin_cmd,
 }
 
-def evaluate(expression, output=sys.stdout):
+def evaluate(expression):
     """Calculate the value of an expression"""
     if isinstance(expression, int):
         return expression
@@ -149,9 +146,9 @@ def evaluate(expression, output=sys.stdout):
         command = commands[expression[0]]
         args = expression[1:]
         check_args(command, args)
-        return command(output, *args)
+        return command(*args)
     else: # apply operator
-        exps = [evaluate(exp, output) for exp in expression]
+        exps = [evaluate(exp) for exp in expression]
         if len(exps) == 0:
             raise NullExpression()
         operator = exps.pop(0)
@@ -173,7 +170,7 @@ def repl(prompt='> '):
     """A read-eval-print loop"""
     while True:
         try:
-            value = evaluate(parse(raw_input(prompt)), output)
+            value = evaluate(parse(raw_input(prompt)))
         except (InterpreterError, ZeroDivisionError) as exc:
             print('! ' + str(exc))
         except KeyboardInterrupt:
