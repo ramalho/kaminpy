@@ -82,6 +82,9 @@ def test_eval_no_operator_detail():
     except InvalidOperator as exc:
         eq_(str(exc), "invalid operator: 2")
 
+def test_eval_multi_add():
+    eq_(evaluate(parse('(+ 1 2 3 4)')), 10)
+
 def test_eval_sub():
     eq_(evaluate(parse('(- 2 3)')), -1)
 

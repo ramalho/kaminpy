@@ -105,7 +105,7 @@ def check_args(function, args):
 # use lambdas and not the operator module because inspect.getargspec 
 # only works with functions defined in Python
 operators = { 
-    '+': lambda a, b: a + b, 
+    '+': lambda *a: sum(a), 
     '-': lambda a, b: a - b, 
     '*': lambda a, b: a * b, 
     '/': lambda a, b: a / b, 
