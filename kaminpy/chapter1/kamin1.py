@@ -93,9 +93,12 @@ def atom(token):
     else:
         return token
 
-def check_args(function, args):
+def check_args(function, args, skip_params=None):
     """Compare arguments with parameters expected by function"""
     fixed_args, var_args = inspect.getargspec(function)[:2]
+    if isinstance(skip_params, (list, tuple)):
+        fixed_args = [arg for arg in fixed_args 
+                          if arg not in skip_params]
     min_args = max_args = len(fixed_args)
     if len(args) < min_args:
         raise MissingArguments()

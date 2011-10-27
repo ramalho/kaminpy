@@ -37,6 +37,24 @@ def test_begin_print_log():
     eq_(evaluate(parse('(begin (print 10) (print 20) (print 30))')), 30)
     eq_(sys.stdout.getvalue(), '10\n20\n30\n')
 
+def test_check_args_ok():
+    def f(a, b): pass
+    check_args(f, [1, 2])
+
+@raises(MissingArguments)
+def test_check_args_missing():
+    def f(a, b): pass
+    check_args(f, [1])
+
+def test_check_args_skip_params():
+    def f(self, a, b): pass
+    check_args(f, [1, 2], ['self'])
+
+@raises(TooManyArguments)
+def test_check_args_missing():
+    def f(a, b): pass
+    check_args(f, [1, 2, 3])
+
 @raises(TooManyArguments)
 def test_if_too_many_args():
     evaluate(parse('(if 1 2 3 4)'))
@@ -56,4 +74,5 @@ def test_print_too_few_args():
 @raises(MissingArguments)
 def test_begin_empty():
     evaluate(parse('(begin)'))
+
 
