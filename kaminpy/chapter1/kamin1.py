@@ -117,56 +117,59 @@ operators = {
     '>': lambda a, b: 1 if a > b else 0,
 }
 
-#######################################################################
-# commands of the language
+class Evaluator(object):
 
-def if_cmd(test, conseq, alt):
-    result = conseq if evaluate(test) else alt
-    return evaluate(result)
+    def __init__(self):
+        self.commands = {}
+        for name in dir(self): # collect methods with _cmd suffix
+            if name.endswith('_cmd'):
+                self.commands[name[:-4]] = getattr(self, name)
 
-def print_cmd(arg):
-    result = evaluate(arg)
-    print(result)
-    return result
+    def evaluate(self, expression):
+        """Calculate the value of an expression"""
+        if isinstance(expression, int):
+            return expression
+        elif isinstance(expression, str): # operator
+            try:
+                return operators[expression]
+            except KeyError:
+                raise InvalidOperator(expression)
+        elif expression[0] in self.commands:
+            # special forms evaluate (or not) their args
+            command = self.commands[expression.pop(0)]
+            check_args(command, expression, ['self'])
+            return command(*expression)
+        else: 
+            # evaluate operator and args
+            exps = [self.evaluate(exp) for exp in expression]
+            if len(exps) == 0:
+                raise NullExpression()
+            operator = exps.pop(0)
+            if callable(operator):
+                check_args(operator, exps)
+                return operator(*exps) # apply operator to args
+            else:
+                raise InvalidOperator(operator)
 
-def begin_cmd(first, *rest):
-    for exp in (first,)+rest:
-        result = evaluate(exp)
-    return result
+    #######################################################################
+    # commands of the language
 
-commands = {
-    'if': if_cmd,
-    'print': print_cmd,
-    'begin': begin_cmd,
-}
+    def if_cmd(self, test, conseq, alt):
+        result = conseq if self.evaluate(test) else alt
+        return self.evaluate(result)
 
-#######################################################################
+    def print_cmd(self, arg):
+        result = self.evaluate(arg)
+        print(result)
+        return result
 
-def evaluate(expression):
-    """Calculate the value of an expression"""
-    if isinstance(expression, int):
-        return expression
-    elif isinstance(expression, str): # operator
-        try:
-            return operators[expression]
-        except KeyError:
-            raise InvalidOperator(expression)
-    elif expression[0] in commands:
-        # special forms evaluate (or not) their args
-        command = commands[expression.pop(0)]
-        check_args(command, expression)
-        return command(*expression)
-    else: 
-        # evaluate operator and args
-        exps = [evaluate(exp) for exp in expression]
-        if len(exps) == 0:
-            raise NullExpression()
-        operator = exps.pop(0)
-        if callable(operator):
-            check_args(operator, exps)
-            return operator(*exps) # apply operator to args
-        else:
-            raise InvalidOperator(operator)
+    def begin_cmd(self, first, *rest):
+        for exp in (first,)+rest:
+            result = self.evaluate(exp)
+        return result
+
+    #######################################################################
+
 
 def repl(prompt='> '):
     """A read-eval-print loop"""

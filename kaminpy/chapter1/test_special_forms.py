@@ -7,6 +7,11 @@ import sys
 
 from kamin1 import *
 
+def setup():
+    global evaluate
+    eva = Evaluator()
+    evaluate = eva.evaluate
+
 def test_eval_if_true():
     eq_(evaluate(parse('(if 1 2 3)')), 2)
 

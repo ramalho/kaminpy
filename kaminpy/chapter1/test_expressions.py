@@ -5,6 +5,11 @@ from nose.tools import eq_, raises, assert_raises
 
 from kamin1 import *
 
+def setup():
+    global evaluate
+    eva = Evaluator()
+    evaluate = eva.evaluate
+
 def test_tokenize_atom():
     eq_(tokenize('3'), ['3'])
 
