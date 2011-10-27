@@ -2,14 +2,13 @@
 # coding: utf-8
 
 '''
-This is a simple arithmetic expression interpreter very much inspired
-by Peter Norvig's lis.py [1]. It implements the arithmetic expression
-subset of the language described in Chapter 1 of Samuel Kamin's book
-Programming Languages book [2].
+This interpreter implements the language described in Chapter 1 of Samuel 
+Kamin's Programming Languages book [1]. This implementation is based on
+Peter Norvig's lis.py [2]. 
 
-[1] http://norvig.com/lispy.html
-[2] Samuel Kamin, "Programming Languages, An Interpreter-Based Approach",
+[1] Samuel Kamin, "Programming Languages, An Interpreter-Based Approach",
     Addison-Wesley, Reading, MA, 1990. ISBN 0-201-06824-9.
+[2] http://norvig.com/lispy.html
 
 BNF of this mini-language (so far):
 
@@ -23,7 +22,6 @@ BNF of this mini-language (so far):
 
 '''
 
-import operator as op
 import re
 import sys
 import inspect
@@ -59,16 +57,16 @@ class TooManyArguments(InterpreterError):
     """too many arguments"""
 
 def tokenize(source_code):
-    """Convert a string into a list of tokens."""
+    """Convert a string into a list of tokens"""
     return source_code.replace('(',' ( ').replace(')',' ) ').split()
 
 def parse(source_code):
-    """Convert a string into expressions represented as nested lists"""
+    """Convert source code into syntax tree"""
     tokens = tokenize(source_code)
     return read(tokens)
 
 def read(tokens):
-    """Read tokens building recursively nested expressions"""
+    """Read tokens building a syntax tree of nested lists of expressions"""
     if len(tokens) == 0:
         raise UnexpectedEndOfInput()
     token = tokens.pop(0)
@@ -89,23 +87,26 @@ def read(tokens):
         return atom(token)
 
 def atom(token):
-    """Return numbers as numbers, everything else as symbols"""
-    if REGEX_INTEGER.match(token):
+    """Return integers as integers, everything else as symbols"""
+    if REGEX_INTEGER.match(token): # -1 is an int, +1 is a symbol
         return int(token)
     else:
         return token
 
-operators = {
-    '+': op.add,
-    '-': op.sub,
-    '*': op.mul,
-    '/': op.div,
+# cannot use the operator module because inspect.getargspec only 
+# works with functions defined in Python
+operators = { 
+    '+': lambda a, b: a + b, 
+    '-': lambda a, b: a - b, 
+    '*': lambda a, b: a * b, 
+    '/': lambda a, b: a / b, 
     '=': lambda a, b: 1 if a == b else 0,
     '<': lambda a, b: 1 if a < b else 0,
     '>': lambda a, b: 1 if a > b else 0,
 }
 
 def check_args(function, args):
+    """Compare arguments with parameters expected by funcion"""
     fixed_args, var_args = inspect.getargspec(function)[:2]
     min_args = max_args = len(fixed_args)
     if len(args) < min_args:
@@ -143,26 +144,19 @@ def evaluate(expression):
         except KeyError:
             raise InvalidOperator(expression)
     elif expression[0] in commands:
-        command = commands[expression[0]]
-        args = expression[1:]
-        check_args(command, args)
-        return command(*args)
-    else: # apply operator
+        # special forms evaluate (or not) their args
+        command = commands[expression.pop(0)]
+        check_args(command, expression)
+        return command(*expression)
+    else: 
+        # evaluate operator and args
         exps = [evaluate(exp) for exp in expression]
         if len(exps) == 0:
             raise NullExpression()
         operator = exps.pop(0)
         if callable(operator):
-            try:
-                arg1, arg2 = exps
-            except ValueError as exc:
-                if exc.message.startswith('need more'):
-                    raise MissingArguments()
-                elif exc.message.startswith('too many'):
-                    raise TooManyArguments()
-                else:
-                    raise
-            return operator(arg1, arg2)
+            check_args(operator, exps)
+            return operator(*exps) # apply operator to args
         else:
             raise InvalidOperator(operator)
 
