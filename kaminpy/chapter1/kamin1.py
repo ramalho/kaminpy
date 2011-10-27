@@ -93,8 +93,17 @@ def atom(token):
     else:
         return token
 
-# cannot use the operator module because inspect.getargspec only 
-# works with functions defined in Python
+def check_args(function, args):
+    """Compare arguments with parameters expected by function"""
+    fixed_args, var_args = inspect.getargspec(function)[:2]
+    min_args = max_args = len(fixed_args)
+    if len(args) < min_args:
+        raise MissingArguments()
+    elif len(args) > max_args and var_args is None:
+        raise TooManyArguments()
+
+# use lambdas and not the operator module because inspect.getargspec 
+# only works with functions defined in Python
 operators = { 
     '+': lambda a, b: a + b, 
     '-': lambda a, b: a - b, 
@@ -105,14 +114,8 @@ operators = {
     '>': lambda a, b: 1 if a > b else 0,
 }
 
-def check_args(function, args):
-    """Compare arguments with parameters expected by funcion"""
-    fixed_args, var_args = inspect.getargspec(function)[:2]
-    min_args = max_args = len(fixed_args)
-    if len(args) < min_args:
-        raise MissingArguments()
-    elif len(args) > max_args and var_args is None:
-        raise TooManyArguments()
+#######################################################################
+# commands of the language
 
 def if_cmd(test, conseq, alt):
     result = conseq if evaluate(test) else alt
@@ -133,6 +136,8 @@ commands = {
     'print': print_cmd,
     'begin': begin_cmd,
 }
+
+#######################################################################
 
 def evaluate(expression):
     """Calculate the value of an expression"""
