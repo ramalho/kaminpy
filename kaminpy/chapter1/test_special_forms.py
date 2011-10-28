@@ -80,5 +80,65 @@ def test_print_too_few_args():
 def test_begin_empty():
     evaluate(parse('(begin)'))
 
-#def test_environment():
+def test_eval_local_symbol():
+    eva = Evaluator()
+    local_env = {'x':3}
+    eq_(eva.evaluate(local_env, parse('x')), 3)
+
+def test_eval_local_set_const():
+    eva = Evaluator()
+    local_env = {'x': 3}
+    expr = parse('(set x 7)')
+    eq_(eva.evaluate(local_env, expr), 7)
+    eq_(local_env['x'], 7)
+
+def test_eval_local_set_expr():
+    eva = Evaluator()
+    local_env = {'x': 3}
+    expr = parse('(set x (+ 4 7))')
+    eq_(eva.evaluate(local_env, expr), 11)
+    eq_(local_env['x'], 11)
+
+def test_eval_global_set():
+    eva = Evaluator()
+    local_env = {}
+    expr = parse('(set x 7)')
+    eq_(eva.evaluate(local_env, expr), 7)
+    eq_(len(local_env), 0)
+    eq_(eva.get(local_env, 'x'), 7)
+
+def test_eval_while():
+    eva = Evaluator()
+    local_env = {}
+    source = """
+        (begin
+            (set n 1)
+            (while n
+                (begin
+                    (print n)
+                    (set n 0)))
+            (print n))
+    """
+    expr = parse(source)
+    eva.evaluate(local_env, expr)
+    eq_(sys.stdout.getvalue(), '1\n0\n')
+
+def test_eval_while_2():
+    eva = Evaluator()
+    local_env = {}
+    source = """
+        (begin
+            (set n 3)
+            (while n
+                (begin
+                    (print n)
+                    (set n (- n 1)))))
+    """
+    expr = parse(source)
+    eva.evaluate(local_env, expr)
+    eq_(sys.stdout.getvalue(), '3\n2\n1\n')
+
+
+
+
 

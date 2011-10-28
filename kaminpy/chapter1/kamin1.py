@@ -13,14 +13,16 @@ Peter Norvig's lis.py [2].
 BNF of this mini-language (so far):
 
 <expression> ::= <integer>
+               | <var-name>
                | `(` <value-op> <expression1>  <expression2> `)`
                | `(` `if` <expression1>  <expression2> <expression3> `)`
                | `(` `print` <expression> `)`
                | `(` `begin` <expression>+ `)`
-               | `(` `set` <identifier> <expression>`)`
+               | `(` `set` <var-name> <expression> `)`
+               | `(` `while` <expression1>  <expression2> `)`
 <value-op>   ::= `+` | `-` | `*` | `/` | `=` | `<` | `>`
 <integer>    ::= sequence of digits, possibly preceded by minus sign
-<identifier> ::= any sequence of characters not an integer, and not
+<var-name>   ::= any sequence of characters not an integer, and not
                  containing a blank or `(`, `)`, `;`
 
 '''
@@ -140,29 +142,36 @@ class Evaluator(object):
             return self.get(local_env, expression)
         elif expression[0] in self.commands:
             # special forms evaluate (or not) their args
-            command = self.commands[expression.pop(0)]
-            check_args(command, expression, ['self', 'local_env'])
-            return command(local_env, *expression)
+            command = self.commands[expression[0]]
+            args = expression[1:]
+            check_args(command, args, ['self', 'local_env'])
+            return command(local_env, *args)
         else: 
             # evaluate operator and args
             exps = [self.evaluate(local_env, exp) for exp in expression]
             if len(exps) == 0:
                 raise NullExpression()
-            operator = exps.pop(0)
+            operator = exps[0]
             if callable(operator):
-                check_args(operator, exps)
-                return operator(*exps) # apply operator to args
+                args = exps[1:]
+                check_args(operator, args)
+                return operator(*args) # apply operator to args
             else:
                 raise InvalidOperator(operator)
 
-    def get(self, local_env, name):
-        if name in local_env:
-            return local_env[name]
-        elif name in self.global_env:
-            return self.global_env[name]
+    def get(self, local_env, identifier):
+        if identifier in local_env:
+            return local_env[identifier]
+        elif identifier in self.global_env:
+            return self.global_env[identifier]
         else:
-            raise UnknownIdentifier(name)
+            raise UnknownIdentifier(identifier)
 
+    def set(self, local_env, identifier, value):
+        if identifier in local_env:
+            local_env[identifier] = value
+        else:
+            self.global_env[identifier] = value
 
     #######################################################################
     # commands of the language
@@ -183,8 +192,14 @@ class Evaluator(object):
 
     def set_cmd(self, local_env, identifier, expression):
         value = self.evaluate(local_env, expression)
-        local_env[identifier] = value
+        self.set(local_env, identifier, value)
         return value
+
+    def while_cmd(self, local_env, test, body):
+        while self.evaluate(local_env, test):
+            self.evaluate(local_env, body)
+        return 0
+
 
     #######################################################################
 
@@ -203,4 +218,21 @@ def repl(prompt='> '):
             print(value)
 
 if __name__=='__main__':
-    repl()
+    #repl()
+
+    eva = Evaluator()
+    local_env = {}
+    source = """
+        (begin
+            (set n 3)
+            (while n
+                (begin
+                    (print n)
+                    (set n (- n 1)))))
+
+    """
+    expr = parse(source)
+    print expr
+    #import pdb; pdb.set_trace()
+    eva.evaluate(local_env, expr)
+

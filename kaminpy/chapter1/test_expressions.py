@@ -138,15 +138,3 @@ def test_eval_too_few_args():
 @raises(TooManyArguments)
 def test_eval_too_many_args():
     evaluate(parse('(* 1 2 3)'))
-
-def test_eval_local_symbol():
-    eva = Evaluator()
-    local_env = {'x':3}
-    eq_(eva.evaluate(local_env, parse('x')), 3)
-
-def test_eval_local_set():
-    eva = Evaluator()
-    local_env = {'x': 3}
-    expr = parse('(set x 7)')
-    eq_(eva.evaluate(local_env, expr), 7)
-    eq_(local_env['x'], 7)
