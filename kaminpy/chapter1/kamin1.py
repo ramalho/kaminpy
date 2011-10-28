@@ -64,6 +64,12 @@ class TooManyArguments(InterpreterError):
 class UnknownIdentifier(InterpreterError):
     """unknown identifier"""
 
+class ReservedIdentifier(InterpreterError):
+    """reserved identifier"""
+
+class InvalidFunctionDefinition(InterpreterError):
+    """invalid function definition"""
+
 def tokenize(source_code):
     """Convert a string into a list of tokens"""
     return source_code.replace('(',' ( ').replace(')',' ) ').split()
@@ -103,14 +109,14 @@ def atom(token):
 
 def check_args(function, args, skip_params=None):
     """Compare arguments with parameters expected by function"""
-    fixed_args, var_args = inspect.getargspec(function)[:2]
+    fixed_params, var_params = inspect.getargspec(function)[:2]
     if isinstance(skip_params, (list, tuple)):
-        fixed_args = [arg for arg in fixed_args 
-                          if arg not in skip_params]
-    min_args = max_args = len(fixed_args)
-    if len(args) < min_args:
+        fixed_params = [param for param in fixed_params 
+                          if param not in skip_params]
+    num_params = len(fixed_params)
+    if len(args) < num_params:
         raise MissingArguments()
-    elif len(args) > max_args and var_args is None:
+    elif len(args) > num_params and var_params is None:
         raise TooManyArguments()
 
 class Evaluator(object):
@@ -133,6 +139,13 @@ class Evaluator(object):
             '>': lambda a, b: 1 if a > b else 0,
         }
         self.global_env = operators.copy()
+        self.user_functions = {}
+
+    def install_function(self, name, params, body):
+        if name in self.commands:
+            msg = 'cannot create function named %r' % name
+            raise ReservedIdentifier(name)
+        self.user_functions[name] = UserFunction(name, params, body)
 
     def evaluate(self, local_env, expression):
         """Calculate the value of an expression"""
@@ -146,6 +159,10 @@ class Evaluator(object):
             args = expression[1:]
             check_args(command, args, ['self', 'local_env'])
             return command(local_env, *args)
+        elif expression[0] in self.user_functions:
+            function = self.user_functions[expression[0]]
+            args = [self.evaluate(local_env, exp) for exp in expression[1:]]
+            function.check_args(args)
         else: 
             # evaluate operator and args
             exps = [self.evaluate(local_env, exp) for exp in expression]
@@ -172,6 +189,27 @@ class Evaluator(object):
             local_env[identifier] = value
         else:
             self.global_env[identifier] = value
+
+    def repl(self, prompt='> '):
+        """A read-eval-print loop"""
+        local_env = {}
+        while True:
+            try:
+                expression = parse(raw_input(prompt))
+                if expression[0] == 'quit':
+                    raise SystemExit
+                elif expression[0] == 'define':
+                    if len(expression) != 4:
+                        raise InvalidFunctionDefinition()
+                    self.install_function(*expression[1:])
+                else:
+                    value = self.evaluate(local_env, expression)
+                    print(value)
+            except (InterpreterError, ZeroDivisionError) as exc:
+                print('! ' + str(exc))
+            except KeyboardInterrupt:
+                print()
+                raise SystemExit
 
     #######################################################################
     # commands of the language
@@ -200,39 +238,19 @@ class Evaluator(object):
             self.evaluate(local_env, body)
         return 0
 
+class UserFunction(object):
+    """A user-defined function"""
+    def __init__(self, name, params, body):
+        self.name = name
+        self.params = params
+        self.body = body
 
-    #######################################################################
-
-
-def repl(prompt='> '):
-    """A read-eval-print loop"""
-    while True:
-        try:
-            value = evaluate(parse(raw_input(prompt)))
-        except (InterpreterError, ZeroDivisionError) as exc:
-            print('! ' + str(exc))
-        except KeyboardInterrupt:
-            print()
-            raise SystemExit
-        else:
-            print(value)
+    def check_args(self, args):
+        if len(args) < len(self.params):
+            raise MissingArguments()
+        elif len(args) > len(self.params):
+            raise TooManyArguments()
 
 if __name__=='__main__':
-    #repl()
-
-    eva = Evaluator()
-    local_env = {}
-    source = """
-        (begin
-            (set n 3)
-            (while n
-                (begin
-                    (print n)
-                    (set n (- n 1)))))
-
-    """
-    expr = parse(source)
-    print expr
-    #import pdb; pdb.set_trace()
-    eva.evaluate(local_env, expr)
+    Evaluator().repl()
 

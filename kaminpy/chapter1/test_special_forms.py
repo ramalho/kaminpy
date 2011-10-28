@@ -138,7 +138,19 @@ def test_eval_while_2():
     eva.evaluate(local_env, expr)
     eq_(sys.stdout.getvalue(), '3\n2\n1\n')
 
+def test_define_user_function():
+    body = parse('(* n 2)')
+    double = UserFunction('double', ['n'], body)
 
+def test_install_function():
+    eva = Evaluator()
+    func_def = parse('(define dobro (n) (* n 2))')
+    eva.install_function(*func_def[1:])
 
+@raises(ReservedIdentifier)
+def test_install_function_reserved_name():
+    eva = Evaluator()
+    func_def = parse('(define if (n) (* n 2))')
+    eva.install_function(*func_def[1:])
 
 
