@@ -1,0 +1,49 @@
+> 3
+3
+> (+ 4 7)
+11
+> (set x 4)
+4
+> x
+4
+> (+ x x)
+8
+> (print x)
+4
+4
+> (set y 5)
+5
+> (begin (print x) (print y) (* x y))
+4
+5
+20
+> (if (> y 0) 10 20)
+10
+> (while (> y 0) (begin (set x (+ x x)) (set y (- y 1))))
+0
+> x
+128
+> (define +1 (x) (+ x 1))
+> (+1 4)
+5
+> (define dobro (x) (* x 2))         
+> (dobro 7)
+14
+> (define not (bool) (if bool 0 1))
+> (define != (x y) (not (= x y)))
+> (define mod (m n) (- m (* n (/ m n))))
+> (define gcd (m n) (begin (set r (mod m n)) (while (!= r 0) (begin (set m n) (set n r) (set r (mod m n)))) n))
+> (gcd (6 15))
+! invalid operator: 6
+> (gcd 6 15)
+3
+> (define mdc (m n) (if (= n 0) m (mdc n (mod m n))))
+> (mdc 6 15)
+3
+> (mdc 28 42)
+14
+> (mdc 35 42)
+7
+> (mdc 14 42)
+14
+> quit    

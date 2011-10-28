@@ -10,20 +10,58 @@ Peter Norvig's lis.py [2].
     Addison-Wesley, Reading, MA, 1990. ISBN 0-201-06824-9.
 [2] http://norvig.com/lispy.html
 
-BNF of this mini-language (so far):
+BNF of this mini-language:
 
+<input>      ::= <expression> | <fundef>
+<fundef>     ::= `(` `define` <function> <arglist> <expression> `)`
+<arglist>    ::= `(` <name>* `)`
 <expression> ::= <integer>
                | <var-name>
-               | `(` <value-op> <expression1>  <expression2> `)`
+               | `(` <operator> <expression>* `)`
                | `(` `if` <expression1>  <expression2> <expression3> `)`
                | `(` `print` <expression> `)`
                | `(` `begin` <expression>+ `)`
-               | `(` `set` <var-name> <expression> `)`
+               | `(` `set` <name> <expression> `)`
                | `(` `while` <expression1>  <expression2> `)`
+<operator>   ::= <function> | <value-op>
+<function>   ::= <name>
 <value-op>   ::= `+` | `-` | `*` | `/` | `=` | `<` | `>`
 <integer>    ::= sequence of digits, possibly preceded by minus sign
-<var-name>   ::= any sequence of characters not an integer, and not
+<name>   ::= any sequence of characters not an integer, and not
                  containing a blank or `(`, `)`, `;`
+
+Note that function definitions are not expressions in this language: they are
+special statements (similarly, they are not expressions in Pascal, C or Java
+either).
+
+A function definition installs a function in a global namespace for later
+use. When invoked, a user defined function receives the arguments as a local
+environment.
+
+All the other statements are expressions, and can be used anywhere an
+expression is expected. The statements are:
+
+(operator expression1 ... expressionN): Evaluate all expressions and apply
+    operator or function to them, returning a result.
+
+(if expression1 expression2 expression3): Evaluate expression1, if result
+    is non-zero, evaluate and return value of expression2, otherwise 
+    evaluate and return value of expression3.
+
+(print expression): Evaluate expression and output its value to stdout.
+
+(begin expression1 ... expressionN): Evaluate all expressions in sequence,
+    and return the value of the last expression.
+
+(set variable expression): Evaluate expression and assign result to variable.
+    If variable is already defined in the local environment (i.e. within a 
+    function), assignment is made in local environment, otherwise the variable
+    is assigned in the global environment. Return the value of the expression.
+
+(while expression1 expression2): Evaluate expression1 and if it is non-zero, 
+    evaluate expression2 then evaluate expression1 again, until expression1
+    evaluates to 0. Always returns 0.
+
 
 '''
 
@@ -162,7 +200,8 @@ class Evaluator(object):
         elif expression[0] in self.user_functions:
             function = self.user_functions[expression[0]]
             args = [self.evaluate(local_env, exp) for exp in expression[1:]]
-            function.check_args(args)
+            local_env = function.bind_args(args)
+            return self.evaluate(local_env, function.body)
         else: 
             # evaluate operator and args
             exps = [self.evaluate(local_env, exp) for exp in expression]
@@ -196,9 +235,9 @@ class Evaluator(object):
         while True:
             try:
                 expression = parse(raw_input(prompt))
-                if expression[0] == 'quit':
-                    raise SystemExit
-                elif expression[0] == 'define':
+                if expression == 'quit':
+                    raise SystemExit                   
+                elif isinstance(expression, list) and expression[0] == 'define':
                     if len(expression) != 4:
                         raise InvalidFunctionDefinition()
                     self.install_function(*expression[1:])
@@ -245,11 +284,12 @@ class UserFunction(object):
         self.params = params
         self.body = body
 
-    def check_args(self, args):
+    def bind_args(self, args):
         if len(args) < len(self.params):
             raise MissingArguments()
         elif len(args) > len(self.params):
             raise TooManyArguments()
+        return dict(zip(self.params, args))
 
 if __name__=='__main__':
     Evaluator().repl()
