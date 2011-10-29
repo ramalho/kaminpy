@@ -1,0 +1,66 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+
+
+</PRE>
+<H4>NAME</H4><PRE>
+       stutter - a simple lisp interpreter
+
+
+</PRE>
+<H4>SYNOPSIS</H4><PRE>
+       <B>stutter</B> <B>-help</B>
+         or
+       <B>stutter</B>
+              <B>[-heap</B> <I>integer</I><B>]</B>
+
+
+</PRE>
+<H4>DESCRIPTION</H4><PRE>
+       This  is  a  simple lisp interpreter that only understands
+       car, cdr, cons, if, set, equal, quote, and lambda, but  is
+       still Turing-complete.  It uses stop-and-copy garbage col-
+       lection and has an  adjustable  heap  size.   Besides  the
+       primitive functions listed above, STUTTER only knows about
+       two cells, t and nil.  See the examples  for  how  integer
+       arithmetic and more complicated programming constructs can
+       be formed with the primitives.
+
+
+</PRE>
+<H4>OPTIONS</H4><PRE>
+       <B>-heap</B> <I>integer</I>
+              Number of cells in the heap.
+
+
+</PRE>
+<H4>BUGS</H4><PRE>
+       If STUTTER can free no cell after a call  to  the  garbage
+       collector, it will exit.
+
+
+</PRE>
+<H4>SEE ALSO</H4><PRE>
+       In  the  data directory are the STUTTER examples demo.slp,
+       sample.slp and float.slp, which may be helpful.
+
+
+</PRE>
+<H4>AUTHOR</H4><PRE>
+       Copyright (c) 1997, Gary William Flake.
+
+       Permission granted for any use according to  the  standard
+       GNU ``copyleft'' agreement provided that the author's com-
+       ments are neither modified nor removed.   No  warranty  is
+       given or implied.
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>
