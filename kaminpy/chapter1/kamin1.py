@@ -2,9 +2,9 @@
 # coding: utf-8
 
 '''
-This interpreter implements the language described in Chapter 1 of Samuel 
+This interpreter implements the language described in Chapter 1 of Samuel
 Kamin's Programming Languages book [1]. This implementation is based on
-Peter Norvig's lis.py [2]. 
+Peter Norvig's lis.py [2].
 
 [1] Samuel Kamin, "Programming Languages, An Interpreter-Based Approach",
     Addison-Wesley, Reading, MA, 1990. ISBN 0-201-06824-9.
@@ -45,7 +45,7 @@ expression is expected. The statements are:
     operator or function to them, returning a result.
 
 (if expression1 expression2 expression3): Evaluate expression1, if result
-    is non-zero, evaluate and return value of expression2, otherwise 
+    is non-zero, evaluate and return value of expression2, otherwise
     evaluate and return value of expression3.
 
 (print expression): Evaluate expression and output its value to stdout.
@@ -54,11 +54,11 @@ expression is expected. The statements are:
     and return the value of the last expression.
 
 (set variable expression): Evaluate expression and assign result to variable.
-    If variable is already defined in the local environment (i.e. within a 
+    If variable is already defined in the local environment (i.e. within a
     function), assignment is made in local environment, otherwise the variable
     is assigned in the global environment. Return the value of the expression.
 
-(while expression1 expression2): Evaluate expression1 and if it is non-zero, 
+(while expression1 expression2): Evaluate expression1 and if it is non-zero,
     evaluate expression2 then evaluate expression1 again, until expression1
     evaluates to 0. Always returns 0.
 
@@ -112,12 +112,7 @@ def tokenize(source_code):
     """Convert a string into a list of tokens"""
     return source_code.replace('(',' ( ').replace(')',' ) ').split()
 
-def parse(source_code):
-    """Convert source code into syntax tree"""
-    tokens = tokenize(source_code)
-    return read(tokens)
-
-def read(tokens):
+def parse(tokens):
     """Read tokens building a syntax tree of nested lists of expressions"""
     if len(tokens) == 0:
         raise UnexpectedEndOfInput()
@@ -128,7 +123,7 @@ def read(tokens):
         if len(tokens) == 0:
             raise UnexpectedEndOfInput()
         while tokens[0] != ')':
-            parsed.append(read(tokens))
+            parsed.append(parse(tokens))
             if len(tokens) == 0:
                 raise UnexpectedEndOfInput()
         tokens.pop(0) # pop off ')'
@@ -137,6 +132,10 @@ def read(tokens):
         raise UnexpectedRightParen()
     else:
         return atom(token)
+
+def parse_source(source_code):
+    '''Convenience function: tokenize and parse source_code'''
+    return parse(tokenize(source_code))
 
 def atom(token):
     """Return integers as integers, everything else as symbols"""
@@ -149,7 +148,7 @@ def check_args(function, args, skip_params=None):
     """Compare arguments with parameters expected by function"""
     fixed_params, var_params = inspect.getargspec(function)[:2]
     if isinstance(skip_params, (list, tuple)):
-        fixed_params = [param for param in fixed_params 
+        fixed_params = [param for param in fixed_params
                           if param not in skip_params]
     num_params = len(fixed_params)
     if len(args) < num_params:
@@ -165,13 +164,13 @@ class Evaluator(object):
             if name.endswith('_cmd'):
                 self.commands[name[:-4]] = getattr(self, name)
 
-        # use lambdas and not the operator module because inspect.getargspec 
+        # use lambdas and not the operator module because inspect.getargspec
         # only works with functions defined in Python
         operators = {
-            '+': lambda *a: sum(a), 
-            '-': lambda a, b: a - b, 
-            '*': lambda a, b: a * b, 
-            '/': lambda a, b: a / b, 
+            '+': lambda *a: sum(a),
+            '-': lambda a, b: a - b,
+            '*': lambda a, b: a * b,
+            '/': lambda a, b: a / b,
             '=': lambda a, b: 1 if a == b else 0,
             '<': lambda a, b: 1 if a < b else 0,
             '>': lambda a, b: 1 if a > b else 0,
@@ -202,7 +201,7 @@ class Evaluator(object):
             args = [self.evaluate(local_env, exp) for exp in expression[1:]]
             local_env = function.bind_args(args)
             return self.evaluate(local_env, function.body)
-        else: 
+        else:
             # evaluate operator and args
             exps = [self.evaluate(local_env, exp) for exp in expression]
             if len(exps) == 0:
@@ -234,9 +233,10 @@ class Evaluator(object):
         local_env = {}
         while True:
             try:
-                expression = parse(raw_input(prompt))
+                tokens = tokenize(raw_input(prompt))
+                expression = parse(tokens)
                 if expression == 'quit':
-                    raise SystemExit                   
+                    raise SystemExit
                 elif isinstance(expression, list) and expression[0] == 'define':
                     if len(expression) != 4:
                         raise InvalidFunctionDefinition()

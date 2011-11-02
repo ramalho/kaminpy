@@ -13,33 +13,33 @@ def setup():
     evaluate = lambda exp: eva.evaluate({}, exp)
 
 def test_eval_if_true():
-    eq_(evaluate(parse('(if 1 2 3)')), 2)
+    eq_(evaluate(parse_source('(if 1 2 3)')), 2)
 
 def test_eval_if_false():
-    eq_(evaluate(parse('(if 0 2 3)')), 3)
+    eq_(evaluate(parse_source('(if 0 2 3)')), 3)
 
 def test_eval_if_true_dont_eval_alternative():
-    eq_(evaluate(parse('(if 1 2 (/ 1 0))')), 2)
+    eq_(evaluate(parse_source('(if 1 2 (/ 1 0))')), 2)
 
 def test_print_value():
-    eq_(evaluate(parse('(print 5)')), 5)
+    eq_(evaluate(parse_source('(print 5)')), 5)
 
 def test_print_output():
-    eq_(evaluate(parse('(print 5)')), 5)
+    eq_(evaluate(parse_source('(print 5)')), 5)
     eq_(sys.stdout.getvalue(), '5\n')
 
 def test_print_expression_value():
-    eq_(evaluate(parse('(print (* 5 2))')), 10)
+    eq_(evaluate(parse_source('(print (* 5 2))')), 10)
     eq_(sys.stdout.getvalue(), '10\n')
 
 def test_begin_simple_value():
-    eq_(evaluate(parse('(begin 1 2 3)')), 3)
+    eq_(evaluate(parse_source('(begin 1 2 3)')), 3)
 
 def test_begin_expr_value():
-    eq_(evaluate(parse('(begin (* 1 10) (* 2 10) (* 3 10))')), 30)
+    eq_(evaluate(parse_source('(begin (* 1 10) (* 2 10) (* 3 10))')), 30)
 
 def test_begin_print_log():
-    eq_(evaluate(parse('(begin (print 10) (print 20) (print 30))')), 30)
+    eq_(evaluate(parse_source('(begin (print 10) (print 20) (print 30))')), 30)
     eq_(sys.stdout.getvalue(), '10\n20\n30\n')
 
 def test_check_args_ok():
@@ -62,47 +62,47 @@ def test_check_args_missing():
 
 @raises(TooManyArguments)
 def test_if_too_many_args():
-    evaluate(parse('(if 1 2 3 4)'))
+    evaluate(parse_source('(if 1 2 3 4)'))
 
 @raises(MissingArguments)
 def test_if_too_few_args():
-    evaluate(parse('(if 1 2)'))
+    evaluate(parse_source('(if 1 2)'))
 
 @raises(TooManyArguments)
 def test_print_too_many_args():
-    evaluate(parse('(print 1 2)'))
+    evaluate(parse_source('(print 1 2)'))
 
 @raises(MissingArguments)
 def test_print_too_few_args():
-    evaluate(parse('(print)'))
+    evaluate(parse_source('(print)'))
 
 @raises(MissingArguments)
 def test_begin_empty():
-    evaluate(parse('(begin)'))
+    evaluate(parse_source('(begin)'))
 
 def test_eval_local_symbol():
     eva = Evaluator()
     local_env = {'x':3}
-    eq_(eva.evaluate(local_env, parse('x')), 3)
+    eq_(eva.evaluate(local_env, parse_source('x')), 3)
 
 def test_eval_local_set_const():
     eva = Evaluator()
     local_env = {'x': 3}
-    expr = parse('(set x 7)')
+    expr = parse_source('(set x 7)')
     eq_(eva.evaluate(local_env, expr), 7)
     eq_(local_env['x'], 7)
 
 def test_eval_local_set_expr():
     eva = Evaluator()
     local_env = {'x': 3}
-    expr = parse('(set x (+ 4 7))')
+    expr = parse_source('(set x (+ 4 7))')
     eq_(eva.evaluate(local_env, expr), 11)
     eq_(local_env['x'], 11)
 
 def test_eval_global_set():
     eva = Evaluator()
     local_env = {}
-    expr = parse('(set x 7)')
+    expr = parse_source('(set x 7)')
     eq_(eva.evaluate(local_env, expr), 7)
     eq_(len(local_env), 0)
     eq_(eva.get(local_env, 'x'), 7)
@@ -119,7 +119,7 @@ def test_eval_while():
                     (set n 0)))
             (print n))
     """
-    expr = parse(source)
+    expr = parse_source(source)
     eva.evaluate(local_env, expr)
     eq_(sys.stdout.getvalue(), '1\n0\n')
 
@@ -134,6 +134,6 @@ def test_eval_while_2():
                     (print n)
                     (set n (- n 1)))))
     """
-    expr = parse(source)
+    expr = parse_source(source)
     eva.evaluate(local_env, expr)
     eq_(sys.stdout.getvalue(), '3\n2\n1\n')
