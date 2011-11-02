@@ -156,7 +156,7 @@ def check_args(function, args, skip_params=None):
     elif len(args) > num_params and var_params is None:
         raise TooManyArguments()
 
-def interactive_reader(prompt1 = '-->', prompt2 = '...'):
+def interactive_reader(prompt1 = '->', prompt2 = '>'):
     """Return tokenized expression, ignoring comments and line breaks"""
     prompt = prompt1
     open_parens = 0 # pending (, not yet closed
@@ -267,9 +267,11 @@ class Evaluator(object):
                     if len(expression) != 4:
                         raise InvalidFunctionDefinition()
                     self.install_function(*expression[1:])
+                    print(expression[1])
                 else:
                     value = self.evaluate(local_env, expression)
                     print(value)
+                    print('')
             except (InterpreterError, ZeroDivisionError) as exc:
                 print('! ' + str(exc))
             except KeyboardInterrupt:
@@ -319,4 +321,3 @@ class UserFunction(object):
 
 if __name__=='__main__':
     Evaluator().repl()
-

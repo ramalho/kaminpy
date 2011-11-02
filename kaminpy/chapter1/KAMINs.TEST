@@ -1,0 +1,6 @@
+#!/bin/bash
+# this is part of Kamin's test, found in kamin/distr/TEST.INTERPS
+echo 'Running CHAP1'
+python kamin1.py < code.ch1 > kamin1.out
+diff code.ch1.o kamin1.out
+rm kamin1.out
