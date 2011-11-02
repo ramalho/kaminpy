@@ -156,6 +156,28 @@ def check_args(function, args, skip_params=None):
     elif len(args) > num_params and var_params is None:
         raise TooManyArguments()
 
+def interactive_reader(prompt1 = '-->', prompt2 = '...'):
+    """Return tokenized expression, ignoring comments and line breaks"""
+    prompt = prompt1
+    open_parens = 0 # pending (, not yet closed
+    tokens = []
+    while True:
+        lin = raw_input(prompt+' ')
+        raw_tokens = tokenize(lin)
+        for pos, token in enumerate(raw_tokens):
+            if token == ';':
+                break
+            elif token == '(':
+                open_parens += 1
+            elif token == ')':
+                open_parens -= 1
+                if open_parens < 0:
+                    raise UnexpectedRightParen()
+            tokens.append(token)
+        if open_parens == 0:
+            return tokens
+        prompt = prompt2
+
 class Evaluator(object):
 
     def __init__(self):
@@ -190,29 +212,33 @@ class Evaluator(object):
             return expression
         elif isinstance(expression, str): # symbol
             return self.get(local_env, expression)
-        elif expression[0] in self.commands:
-            # special forms evaluate (or not) their args
-            command = self.commands[expression[0]]
-            args = expression[1:]
-            check_args(command, args, ['self', 'local_env'])
-            return command(local_env, *args)
-        elif expression[0] in self.user_functions:
-            function = self.user_functions[expression[0]]
-            args = [self.evaluate(local_env, exp) for exp in expression[1:]]
-            local_env = function.bind_args(args)
-            return self.evaluate(local_env, function.body)
-        else:
-            # evaluate operator and args
-            exps = [self.evaluate(local_env, exp) for exp in expression]
-            if len(exps) == 0:
-                raise NullExpression()
-            operator = exps[0]
-            if callable(operator):
-                args = exps[1:]
-                check_args(operator, args)
-                return operator(*args) # apply operator to args
+        elif isinstance(expression, list):
+            if expression[0] in self.commands:
+                # special forms evaluate (or not) their args
+                command = self.commands[expression[0]]
+                args = expression[1:]
+                check_args(command, args, ['self', 'local_env'])
+                return command(local_env, *args)
+            elif expression[0] in self.user_functions:
+                function = self.user_functions[expression[0]]
+                args = [self.evaluate(local_env, exp) for exp in expression[1:]]
+                local_env = function.bind_args(args)
+                return self.evaluate(local_env, function.body)
             else:
-                raise InvalidOperator(operator)
+                # evaluate operator and args
+                exps = [self.evaluate(local_env, exp) for exp in expression]
+                if len(exps) == 0:
+                    raise NullExpression()
+                operator = exps[0]
+                if callable(operator):
+                    args = exps[1:]
+                    check_args(operator, args)
+                    return operator(*args) # apply operator to args
+                else:
+                    raise InvalidOperator(operator)
+        else:
+            msg = 'Cannot evaluate {0!r}'.format(expression)
+            raise InterpreterError(msg)
 
     def get(self, local_env, identifier):
         if identifier in local_env:
@@ -233,7 +259,7 @@ class Evaluator(object):
         local_env = {}
         while True:
             try:
-                tokens = tokenize(raw_input(prompt))
+                tokens = interactive_reader()
                 expression = parse(tokens)
                 if expression == 'quit':
                     raise SystemExit
