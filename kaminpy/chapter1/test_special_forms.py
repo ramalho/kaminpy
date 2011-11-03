@@ -2,7 +2,6 @@
 # coding: utf-8
 
 from nose.tools import eq_, raises, assert_raises
-from StringIO import StringIO
 import sys
 
 from kamin1 import *

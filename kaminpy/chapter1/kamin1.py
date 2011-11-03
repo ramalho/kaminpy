@@ -156,13 +156,13 @@ def check_args(function, args, skip_params=None):
     elif len(args) > num_params and var_params is None:
         raise TooManyArguments()
 
-def interactive_reader(prompt1 = '->', prompt2 = '>'):
+def sexpression_reader(linereader, prompt1='->', prompt2='>'):
     """Return tokenized expression, ignoring comments and line breaks"""
     prompt = prompt1
     open_parens = 0 # pending (, not yet closed
     tokens = []
     while True:
-        lin = raw_input(prompt+' ')
+        lin = linereader(prompt+' ')
         raw_tokens = tokenize(lin)
         for pos, token in enumerate(raw_tokens):
             if token == ';':
@@ -177,6 +177,15 @@ def interactive_reader(prompt1 = '->', prompt2 = '>'):
         if open_parens == 0:
             return tokens
         prompt = prompt2
+
+def interactive_reader():
+    return sexpression_reader(raw_input)
+
+def batch_reader(src_file):
+    def linereader(dummy):
+        return src_file.readline().rstrip()
+    return sexpression_reader(linereader)
+
 
 class Evaluator(object):
 
@@ -208,7 +217,7 @@ class Evaluator(object):
 
     def evaluate(self, local_env, expression):
         """Calculate the value of an expression"""
-        if isinstance(expression, int):
+        if isinstance(expression, (int, long)):
             return expression
         elif isinstance(expression, str): # symbol
             return self.get(local_env, expression)
@@ -262,21 +271,37 @@ class Evaluator(object):
                 tokens = interactive_reader()
                 expression = parse(tokens)
                 if expression == 'quit':
-                    raise SystemExit
+                    return
                 elif isinstance(expression, list) and expression[0] == 'define':
                     if len(expression) != 4:
                         raise InvalidFunctionDefinition()
                     self.install_function(*expression[1:])
-                    print(expression[1])
+                    print expression[1]
                 else:
                     value = self.evaluate(local_env, expression)
-                    print(value)
-                    print('')
+                    print value
+                    print
             except (InterpreterError, ZeroDivisionError) as exc:
-                print('! ' + str(exc))
-            except KeyboardInterrupt:
-                print()
-                raise SystemExit
+                print '!', str(exc)
+            except (KeyboardInterrupt, EOFError):
+                print
+                return
+
+    def run(self, src_file):
+        local_env = {}
+        while True:
+            tokens = batch_reader(src_file)
+            if not tokens:
+                return
+            expression = parse(tokens)
+            if expression == 'quit':
+                return
+            elif isinstance(expression, list) and expression[0] == 'define':
+                if len(expression) != 4:
+                    raise InvalidFunctionDefinition()
+                self.install_function(*expression[1:])
+            else:
+                value = self.evaluate(local_env, expression)
 
     #######################################################################
     # commands of the language
@@ -287,7 +312,7 @@ class Evaluator(object):
 
     def print_cmd(self, local_env, arg):
         result = self.evaluate(local_env, arg)
-        print(result)
+        print result
         return result
 
     def begin_cmd(self, local_env, first, *rest):
@@ -320,4 +345,13 @@ class UserFunction(object):
         return dict(zip(self.params, args))
 
 if __name__=='__main__':
-    Evaluator().repl()
+    if len(sys.argv) == 1:
+        Evaluator().repl()
+    elif len(sys.argv) == 2 and sys.argv[1] != '-h':
+        try:
+            with open(sys.argv[1]) as src:
+                Evaluator().run(src)
+        except IOError as exc:
+            print exc
+    else:
+        print 'usage: {0} [src.ch1]'.format(__file__)

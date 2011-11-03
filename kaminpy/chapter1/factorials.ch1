@@ -1,0 +1,10 @@
+(define ! (n)
+    (if (< n 2)
+        1
+        (* n (! (- n 1)))))
+(set n 5)
+(while (< n 11)
+    (begin
+        (print n)
+        (print (! n))
+        (set n (+ n 1))))

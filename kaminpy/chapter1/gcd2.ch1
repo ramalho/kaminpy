@@ -1,0 +1,4 @@
+(define mod (m n) (- m (* n (/ m n))))
+(define gcd (m n)
+      (if (= n 0) m (gcd n (mod m n))))
+(print (gcd 327306 418866))

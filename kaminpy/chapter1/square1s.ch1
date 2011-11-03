@@ -1,0 +1,6 @@
+(set n 1)
+(while (< n 1000000000)
+  (begin
+    (print n)
+    (print (* n n))
+    (set n (+ 1 (* n 10)))))

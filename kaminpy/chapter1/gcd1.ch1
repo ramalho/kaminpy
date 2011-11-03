@@ -1,0 +1,13 @@
+(define not (boolval) (if boolval 0 1))
+(define != (x y) (not (= x y)))
+(define mod (m n) (- m (* n (/ m n))))
+(define gcd (m n)
+  (begin
+    (set r (mod m n))
+    (while (!= r 0)
+      (begin
+      (set m n)
+      (set n r)
+      (set r (mod m n))))
+    n))
+(print (gcd 6 15))
