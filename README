@@ -1,6 +1,14 @@
-Original source code and additional experiments with the example interpreters
-from the book:
+This repository contains new implementations -- in Python -- of the 
+interpreters described in Samuel Kamin's excellent PLIBA [1] book. 
 
-Samuel Kamin, "Programming Languages, An Interpreter-Based Approach",
-   Addison-Wesley, Reading, MA, 1990. ISBN 0-201-06824-9.
+[1] Samuel Kamin, "Programming Languages, An Interpreter-Based Approach",
+      Addison-Wesley, Reading, MA, 1990. ISBN 0-201-06824-9.
+      
+Kamin's original source code in Pascal, Tim Budd's C++ implementations,
+Norvig's lis.py and other relevant resources are in the references/ 
+directory.
+
+The Python interpreters are being written by:
+
+- Luciano Ramalho
 
