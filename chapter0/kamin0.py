@@ -25,7 +25,7 @@ import re
 
 REGEX_INTEGER = re.compile(r'-?\d+$')
 
-class InterpreterError(StandardError):
+class InterpreterError(Exception):
     """generic interpreter error"""
     def __init__(self, value=None):
         self.value = value
@@ -100,7 +100,7 @@ operators = {
     '+': op.add,
     '-': op.sub,
     '*': op.mul,
-    '/': op.div,
+    '/': op.floordiv,
     '=': lambda a, b: 1 if a == b else 0,
     '<': lambda a, b: 1 if a < b else 0,
     '>': lambda a, b: 1 if a > b else 0,
@@ -121,16 +121,13 @@ def evaluate(expression):
             raise NullExpression()
         operator = exps.pop(0)
         if callable(operator):
-            try:
+            if len(exps) == 2:
                 arg1, arg2 = exps
-            except ValueError as exc:
-                if exc.message.startswith('need more'):
-                    raise MissingArguments()
-                elif exc.message.startswith('too many'):
-                    raise TooManyArguments()
-                else:
-                    raise
-            return operator(arg1, arg2)
+                return operator(arg1, arg2)
+            elif len(exps) < 2:
+                raise MissingArguments()
+            else:
+                raise TooManyArguments()
         else:
             raise InvalidOperator(operator)
 
