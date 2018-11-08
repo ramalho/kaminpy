@@ -135,7 +135,7 @@ def repl(prompt='> '):
     """A read-eval-print loop"""
     while True:
         try:
-            value = evaluate(parse(raw_input(prompt)))
+            value = evaluate(parse(input(prompt)))
         except (InterpreterError, ZeroDivisionError) as exc:
             print('! ' + str(exc))
         except KeyboardInterrupt:
