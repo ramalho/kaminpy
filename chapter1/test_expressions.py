@@ -129,7 +129,7 @@ def test_eval_gt_false_2():
 
 @raises(UnknownIdentifier)
 def test_plus_number():
-    print evaluate(parse_source('+1'))
+    print(evaluate(parse_source('+1')))
 
 @raises(MissingArguments)
 def test_eval_too_few_args():

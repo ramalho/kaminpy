@@ -71,7 +71,7 @@ import inspect
 
 REGEX_INTEGER = re.compile(r'-?\d+$')
 
-class InterpreterError(StandardError):
+class InterpreterError(Exception):
     """generic interpreter error"""
     def __init__(self, value=None):
         self.value = value
@@ -146,7 +146,7 @@ def atom(token):
 
 def check_args(function, args, skip_params=None):
     """Compare arguments with parameters expected by function"""
-    fixed_params, var_params = inspect.getargspec(function)[:2]
+    fixed_params, var_params = inspect.getfullargspec(function)[:2]
     if isinstance(skip_params, (list, tuple)):
         fixed_params = [param for param in fixed_params
                           if param not in skip_params]
@@ -179,7 +179,7 @@ def sexpression_reader(linereader, prompt1='->', prompt2='>'):
         prompt = prompt2
 
 def interactive_reader():
-    return sexpression_reader(raw_input)
+    return sexpression_reader(input)
 
 def batch_reader(src_file):
     def linereader(dummy):
@@ -201,7 +201,7 @@ class Evaluator(object):
             '+': lambda *a: sum(a),
             '-': lambda a, b: a - b,
             '*': lambda a, b: a * b,
-            '/': lambda a, b: a / b,
+            '/': lambda a, b: a // b,
             '=': lambda a, b: 1 if a == b else 0,
             '<': lambda a, b: 1 if a < b else 0,
             '>': lambda a, b: 1 if a > b else 0,
@@ -217,7 +217,7 @@ class Evaluator(object):
 
     def evaluate(self, local_env, expression):
         """Calculate the value of an expression"""
-        if isinstance(expression, (int, long)):
+        if isinstance(expression, int):
             return expression
         elif isinstance(expression, str): # symbol
             return self.get(local_env, expression)
@@ -276,15 +276,15 @@ class Evaluator(object):
                     if len(expression) != 4:
                         raise InvalidFunctionDefinition()
                     self.install_function(*expression[1:])
-                    print expression[1]
+                    print(expression[1])
                 else:
                     value = self.evaluate(local_env, expression)
-                    print value
-                    print
+                    print(value)
+                    print()
             except (InterpreterError, ZeroDivisionError) as exc:
-                print '!', str(exc)
+                print('!', str(exc))
             except (KeyboardInterrupt, EOFError):
-                print
+                print()
                 return
 
     def run(self, src_file):
@@ -312,7 +312,7 @@ class Evaluator(object):
 
     def print_cmd(self, local_env, arg):
         result = self.evaluate(local_env, arg)
-        print result
+        print(result)
         return result
 
     def begin_cmd(self, local_env, first, *rest):
@@ -352,6 +352,6 @@ if __name__=='__main__':
             with open(sys.argv[1]) as src:
                 Evaluator().run(src)
         except IOError as exc:
-            print exc
+            print(exc)
     else:
-        print 'usage: {0} [src.ch1]'.format(__file__)
+        print('usage: {0} [src.ch1]'.format(__file__))

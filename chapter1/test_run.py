@@ -6,7 +6,7 @@ import sys
 
 from kamin1 import Evaluator
 
-from StringIO import StringIO
+from io import StringIO
 
 def test_expr_no_output():
     eva = Evaluator()
