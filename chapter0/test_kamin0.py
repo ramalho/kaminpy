@@ -1,6 +1,8 @@
 from pytest import raises
 
-from kamin0 import *
+from kamin0 import tokenize, evaluate, parse
+from kamin0 import UnexpectedEndOfInput, UnexpectedRightParen
+from kamin0 import InvalidOperator, MissingArguments, TooManyArguments
 
 def test_tokenize_atom():
     assert tokenize('3') == ['3']
@@ -90,7 +92,8 @@ def test_eval_div_returns_int():
     assert evaluate(parse('(/ 6 4)')) == 1
 
 def test_eval_div_by_zero():
-    raises(ZeroDivisionError, evaluate, parse('(/ 6 0)'))
+    with raises(ZeroDivisionError):
+        evaluate(parse('(/ 6 0)'))
 
 def test_eval_eq_true():
     assert evaluate(parse('(= 2 2)')) == 1
