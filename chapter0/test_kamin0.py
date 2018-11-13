@@ -33,19 +33,22 @@ def test_parse_empty_paren():
     assert parse('()') == []
 
 def test_parse_empty():
-    raises(UnexpectedEndOfInput, parse, '')
+    with raises(UnexpectedEndOfInput):
+        parse('')
 
 def test_parse_right_paren():
-    raises(UnexpectedRightParen, parse, ')')
+    with raises(UnexpectedRightParen):
+        parse(')')
 
 def test_parse_open_paren():
-    raises(UnexpectedEndOfInput, parse, '(')
+    with raises(UnexpectedEndOfInput):
+        parse('(')
 
 def test_parse_right_paren_detail():
-    try:
+    with raises(UnexpectedRightParen) as excinfo:
         parse(')')
-    except UnexpectedRightParen as exc:
-        assert str(exc) == 'unexpected )'
+
+    assert str(excinfo.value) == 'unexpected )'
 
 def test_parse_plus_one():
     assert parse('(++ 2)') == ['++', 2]
@@ -64,10 +67,12 @@ def test_eval_numexp_inner():
     assert evaluate(parse('(+ 2 (* 3 4))')) == 14
 
 def test_eval_no_operator():
-    raises(InvalidOperator, evaluate, parse('(2)'))
+    with raises(InvalidOperator):
+        evaluate(parse('(2)'))
 
 def test_eval_no_operator2():
-    raises(InvalidOperator, evaluate, parse('(2 3)'))
+    with raises(InvalidOperator):
+        evaluate(parse('(2 3)'))
 
 def test_eval_no_operator_detail():
     with raises(InvalidOperator) as excinfo:
@@ -112,10 +117,13 @@ def test_eval_gt_false_2():
     assert evaluate(parse('(> 3 4)')) == 0
 
 def test_plus_number():
-    raises(InvalidOperator, evaluate, parse('+1'))
+    with raises(InvalidOperator):
+        evaluate(parse('+1'))
 
 def test_eval_too_few_args():
-    raises(MissingArguments, evaluate, parse('(* 1)'))
+    with raises(MissingArguments):
+        evaluate(parse('(* 1)'))
 
 def test_eval_too_many_args():
-    raises(TooManyArguments, evaluate, parse('(* 1 2 3)'))
+    with raises(TooManyArguments):
+        evaluate(parse('(* 1 2 3)'))
