@@ -121,15 +121,15 @@ def evaluate(expression):
         except KeyError:
             raise UnknownOperator(expression)
     else:  # multi-part expression
-        exps = [evaluate(exp) for exp in expression]
-        if len(exps) == 0:
+        if len(expression) == 0:
             raise NullExpression()
-        op = exps.pop(0)
+        parts = [evaluate(subexp) for subexp in expression]
+        op = parts.pop(0)
         if isinstance(op, Operator):
-            if len(exps) == 2:
-                arg1, arg2 = exps
+            if len(parts) == 2:
+                arg1, arg2 = parts
                 return op.function(arg1, arg2)
-            elif len(exps) < 2:
+            elif len(parts) < 2:
                 raise MissingArgument(op.symbol)
             else:
                 raise TooManyArguments(op.symbol)
