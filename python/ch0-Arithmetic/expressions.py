@@ -101,14 +101,14 @@ def parse(tokens):
 
 Operator = collections.namedtuple("Operator", "symbol function")
 
-operator_list = [
+OPERATORS = [
     Operator("+", operator.add),
     Operator("-", operator.sub),
     Operator("*", operator.mul),
     Operator("/", operator.floordiv),
 ]
 
-operators = {op.symbol: op for op in operator_list}
+OPERATOR_MAP = {op.symbol: op for op in OPERATORS}
 
 
 def evaluate(expression):
@@ -117,10 +117,10 @@ def evaluate(expression):
         return expression
     elif isinstance(expression, str):  # operator
         try:
-            return operators[expression]
+            return OPERATOR_MAP[expression]
         except KeyError:
             raise UnknownOperator(expression)
-    else:  # s-expression
+    else:  # multi-part expression
         exps = [evaluate(exp) for exp in expression]
         if len(exps) == 0:
             raise NullExpression()
