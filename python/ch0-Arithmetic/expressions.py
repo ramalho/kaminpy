@@ -80,14 +80,16 @@ def parse(tokens):
     """Read tokens building recursively nested expressions."""
     try:
         token = tokens.pop(0)
-    except IndexError:
-        raise UnexpectedEndOfInput()
+    except IndexError as exc:
+        raise UnexpectedEndOfInput() from exc
     if token == "(":  # s-expression
         ast = []
         if len(tokens) == 0:
             raise UnexpectedEndOfInput()
         while tokens[0] != ")":
             ast.append(parse(tokens))
+            if len(tokens) == 0:
+                raise UnexpectedEndOfInput()
         tokens.pop(0)  # pop off ')'
         return ast
     elif token == ")":
@@ -118,8 +120,8 @@ def evaluate(expression):
     elif isinstance(expression, str):  # operator
         try:
             return OPERATOR_MAP[expression]
-        except KeyError:
-            raise UnknownOperator(expression)
+        except KeyError as exc:
+            raise UnknownOperator(expression) from exc
     else:  # multi-part expression
         if len(expression) == 0:
             raise NullExpression()
@@ -135,3 +137,34 @@ def evaluate(expression):
                 raise TooManyArguments(op.symbol)
         else:
             raise InvalidOperator(op)
+
+def repl():
+    prompt = '>'
+    pending_lines = []
+    while True:
+        current = input(prompt + ' ').strip()
+        if current == '':
+            prompt = '...'
+            continue
+        if '.quit'.startswith(current.lower()):
+            break
+        pending_lines.append(current)
+        source = ' '.join(pending_lines) 
+        try:
+            expr = parse(tokenize(source))
+        except UnexpectedEndOfInput:
+            prompt = '...'
+            continue
+        try:
+            result = evaluate(expr)
+        except ZeroDivisionError:
+            print('! Division by zero.')
+        except (UnknownOperator, MissingArgument, TooManyArguments) as exc:
+            print(f'! {exc}')
+        else:
+            print(result)
+        prompt = '>'
+        pending_lines = []
+
+if __name__ == '__main__':
+    repl()

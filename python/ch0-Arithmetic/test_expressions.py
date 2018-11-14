@@ -1,8 +1,9 @@
 import operator
+import textwrap
 
 from pytest import mark, raises
 
-from expressions import tokenize, parse, evaluate, Operator
+from expressions import tokenize, parse, evaluate, Operator, repl
 from expressions import UnexpectedEndOfInput, UnexpectedRightParen
 from expressions import UnknownOperator, InvalidOperator
 from expressions import MissingArgument, TooManyArguments
@@ -123,3 +124,77 @@ def test_evaluate_too_many_arguments():
         evaluate(expr)
 
     assert str(excinfo.value) == "Too many arguments for operator: '/'."
+
+
+class TextInteraction():
+
+    def __init__(self, session):
+        self.session = session
+
+    def __iter__(self):
+        for line in self.session.splitlines():
+            line = line.strip()
+            if line.startswith('> '):
+                yield line[2:]
+            elif line.startswith('... '):
+                yield line[4:]
+
+    def make_input(self):
+        line_gen = iter(self)
+        def fake_input(prompt):
+            print(prompt, end='')
+            line = next(line_gen)
+            print(line)
+            return line
+        return fake_input
+
+    def __str__(self):
+        return textwrap.dedent(self.session.lstrip('\n'))
+
+
+@mark.parametrize("session", [
+    """
+    > (* 111 111)
+    12321
+    > .quit
+    """,
+    """
+    > (* 111
+    ... 111)
+    12321
+    > .quit
+    """,
+    """
+    > (/ 6 0)
+    ! Division by zero.
+    > (/ 6 3)
+    2
+    > .quit
+    """,
+    """
+    > (foo 6 0)
+    ! Unknown operator: 'foo'.
+    > (/ 6 3)
+    2
+    > .quit
+    """,
+    """
+    > (+ 6)
+    ! Not enough arguments for operator: '+'.
+    > (+ 6 3)
+    9
+    > .quit
+    """,
+    """
+    > (/ 6 5 4)
+    ! Too many arguments for operator: '/'.
+    > .quit
+    """,
+])
+def test_repl(monkeypatch, capsys, session):
+    ti = TextInteraction(session)
+    with monkeypatch.context() as m:
+        m.setitem(__builtins__, "input", ti.make_input())
+        repl()
+        captured = capsys.readouterr()
+    assert captured.out == str(ti)
