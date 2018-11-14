@@ -11,9 +11,9 @@ but does not try to be as concise.
 BNF of this mini-language:
 
 <expression> ::= <integer>
-               | `(` <value-op> <expression>* `)`
-<value-op>   ::= `+` | `-` | `*` | `/` | `=` | `<` | `>`
-<integer>    ::= sequence of digits, possibly preceded by minus sign
+               | `(` <operator> <expression>* `)`
+<operator>   ::= `+` | `-` | `*` | `/`
+<integer>    ::= sequence of digits, possibly preceded by - or +
 
 """
 
@@ -101,14 +101,14 @@ def parse(tokens):
 
 Operator = collections.namedtuple("Operator", "symbol function")
 
-operators = [
+operator_list = [
     Operator("+", operator.add),
     Operator("-", operator.sub),
     Operator("*", operator.mul),
     Operator("/", operator.floordiv),
 ]
 
-operator_map = {op.symbol: op for op in operators}
+operators = {op.symbol: op for op in operator_list}
 
 
 def evaluate(expression):
@@ -117,7 +117,7 @@ def evaluate(expression):
         return expression
     elif isinstance(expression, str):  # operator
         try:
-            return operator_map[expression]
+            return operators[expression]
         except KeyError:
             raise UnknownOperator(expression)
     else:  # s-expression
