@@ -97,7 +97,7 @@ def test_evaluate_expressions(source, want):
     ("(? 1 2 3)", 2),
     ("(? 0 2 3)", 3),
 ])
-def test_evaluate_operators_arity_1(source, want):
+def test_evaluate_operators_arity_not_2(source, want):
     expr = parse(tokenize(source))
     assert evaluate(expr) == want
 
@@ -175,7 +175,7 @@ class TextInteraction():
 
 @mark.parametrize("session", [
     """
-    > .quit
+    > .q
     """,
     """
     > (* 111 111)

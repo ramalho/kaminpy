@@ -164,7 +164,7 @@ class TextInteraction():
 
 @mark.parametrize("session", [
     """
-    > .quit
+    > .q
     """,
     """
     > (* 111 111)

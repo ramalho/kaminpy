@@ -21,7 +21,7 @@ import collections
 import operator
 import sys
 
-QUIT_COMMAND = '.quit'
+QUIT_COMMAND = '.q'
 
 
 class InterpreterError(Exception):
@@ -147,6 +147,7 @@ def repl():
     pending_lines = []
     print(f'To exit, type: {QUIT_COMMAND}', file=sys.stderr)
     while True:
+        # ______________________________ Read
         try:
             current = input(prompt + ' ').strip(' ')
         except EOFError:
@@ -157,6 +158,7 @@ def repl():
             prompt = '...'
             continue
         pending_lines.append(current)
+        # ______________________________ Parse
         source = ' '.join(pending_lines)
         expr = None
         try:
@@ -166,6 +168,7 @@ def repl():
             continue
         except UnexpectedCloseParen as exc:
             print(f'! {exc}')
+        # ______________________________ Evaluate & Print
         if expr is not None:
             try:
                 result = evaluate(expr)
@@ -179,6 +182,7 @@ def repl():
                 print(result)
         prompt = '>'
         pending_lines = []
+        # ______________________________ Loop
 
 
 if __name__ == '__main__':

@@ -21,7 +21,7 @@ import operator
 import sys
 import inspect
 
-QUIT_COMMAND = '.quit'
+QUIT_COMMAND = '.q'
 
 
 class InterpreterError(Exception):
@@ -117,6 +117,15 @@ class Operator:
     def __eq__(self, other):
         return self.symbol == other.symbol and self.function == other.function
 
+    def eval(self, args):
+        needed = self.len_args()
+        if len(args) == needed:
+            return self.function(*args)
+        elif len(args) < needed:
+            raise MissingArgument(self.symbol)
+        else:
+            raise TooManyArguments(self.symbol)
+
 
 OPERATORS = [
     Operator("+", operator.add),
@@ -131,7 +140,7 @@ OPERATOR_MAP = {op.symbol: op for op in OPERATORS}
 
 
 def evaluate(expression):
-    """Calculate the value of an expression"""
+    """Compute the value of an expression AST."""
     if isinstance(expression, int):  # integer
         return expression
     elif isinstance(expression, str):  # operator
@@ -145,13 +154,7 @@ def evaluate(expression):
         parts = [evaluate(subexp) for subexp in expression]
         op = parts.pop(0)
         if isinstance(op, Operator):
-            needed = op.len_args()
-            if len(parts) == needed:
-                return op.function(*parts)
-            elif len(parts) < needed:
-                raise MissingArgument(op.symbol)
-            else:
-                raise TooManyArguments(op.symbol)
+            return op.eval(parts)
         else:
             raise InvalidOperator(op)
 
@@ -161,6 +164,7 @@ def repl():
     pending_lines = []
     print(f'To exit, type: {QUIT_COMMAND}', file=sys.stderr)
     while True:
+        # ______________________________ Read
         try:
             current = input(prompt + ' ').strip(' ')
         except EOFError:
@@ -171,6 +175,7 @@ def repl():
             prompt = '...'
             continue
         pending_lines.append(current)
+        # ______________________________ Parse
         source = ' '.join(pending_lines)
         expr = None
         try:
@@ -180,6 +185,7 @@ def repl():
             continue
         except UnexpectedCloseParen as exc:
             print(f'! {exc}')
+        # ______________________________ Evaluate & Print
         if expr is not None:
             try:
                 result = evaluate(expr)
@@ -193,6 +199,7 @@ def repl():
                 print(result)
         prompt = '>'
         pending_lines = []
+        # ______________________________ Loop
 
 
 if __name__ == '__main__':
