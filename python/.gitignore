@@ -1,0 +1,4 @@
+.coverage
+.idea/
+.venv36/
+htmlcov/
