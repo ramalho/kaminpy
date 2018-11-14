@@ -20,6 +20,7 @@ BNF of this mini-language:
 import collections
 import operator
 
+QUIT_COMMAND = '.quit'
 
 class InterpreterError(Exception):
     """generic interpreter error"""
@@ -138,16 +139,20 @@ def evaluate(expression):
         else:
             raise InvalidOperator(op)
 
+
 def repl():
     prompt = '>'
     pending_lines = []
     while True:
-        current = input(prompt + ' ').strip()
+        try:
+            current = input(prompt + ' ').strip()
+        except EOFError:
+            break
+        if QUIT_COMMAND.startswith(current.lower()):
+            break
         if current == '':
             prompt = '...'
             continue
-        if '.quit'.startswith(current.lower()):
-            break
         pending_lines.append(current)
         source = ' '.join(pending_lines) 
         try:
