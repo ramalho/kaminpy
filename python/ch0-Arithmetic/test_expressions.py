@@ -130,23 +130,23 @@ class TextInteraction():
 
     def __init__(self, session):
         self.session = session
+        self.prompts = set()
+        self.input_line_gen = iter(self)
 
     def __iter__(self):
         for line in self.session.splitlines():
             line = line.strip()
-            if line.startswith('> '):
-                yield line[2:]
-            elif line.startswith('... '):
-                yield line[4:]
+            for prompt in self.prompts:
+                if line.startswith(prompt):
+                    yield line[len(prompt):]
+                    break
 
-    def make_input(self):
-        line_gen = iter(self)
-        def fake_input(prompt):
-            print(prompt, end='')
-            line = next(line_gen)
-            print(line)
-            return line
-        return fake_input
+    def fake_input(self, prompt):
+        self.prompts.add(prompt)
+        print(prompt, end='')
+        line = next(self.input_line_gen)
+        print(line)
+        return line
 
     def __str__(self):
         return textwrap.dedent(self.session.lstrip('\n'))
@@ -194,7 +194,7 @@ class TextInteraction():
 def test_repl(monkeypatch, capsys, session):
     ti = TextInteraction(session)
     with monkeypatch.context() as m:
-        m.setitem(__builtins__, "input", ti.make_input())
+        m.setitem(__builtins__, "input", ti.fake_input)
         repl()
         captured = capsys.readouterr()
     assert captured.out == str(ti)
