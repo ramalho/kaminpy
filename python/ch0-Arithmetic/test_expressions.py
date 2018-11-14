@@ -8,27 +8,31 @@ from expressions import UnknownOperator, InvalidOperator
 from expressions import MissingArgument, TooManyArguments
 
 
-@mark.parametrize(
-    "source,want",
-    [
-        ("3", ["3"]),
-        ("(+ 2 3)", ["(", "+", "2", "3", ")"]),
-        ("(+ 2 (* 3 4))", ["(", "+", "2", "(", "*", "3", "4", ")", ")"]),
-    ],
-)
+@mark.parametrize("source,want", [
+    ("3", ["3"]),
+    ("(+ 2 3)", ["(", "+", "2", "3", ")"]),
+    ("(+ 2 (* 3 4))", ["(", "+", "2", "(", "*", "3", "4", ")", ")"]),
+])
 def test_tokenize(source, want):
     assert tokenize(source) == want
 
 
-@mark.parametrize("tokens,want", [(["3"], 3), (["-3"], -3), (["+3"], 3), (["+"], "+")])
+@mark.parametrize("tokens,want", [
+    (["3"], 3),
+    (["-3"], -3),
+    (["+3"], 3),
+    (["+"], "+"),
+])
 def test_parse_atoms(tokens, want):
     assert parse(tokens) == want
 
 
-@mark.parametrize(
-    "source,want",
-    [("(2)", [2]), ("(+ 2 3)", ["+", 2, 3]), ("(+ 2 (* 3 4))", ["+", 2, ["*", 3, 4]])],
-)
+@mark.parametrize("source,want", [
+    ("(2)", [2]),
+    ("(+ 2 3)", ["+", 2, 3]),
+    ("(+ 2 (* 3 4))",
+    ["+", 2, ["*", 3, 4]]),
+])
 def test_parse_expressions(source, want):
     tokens = tokenize(source)
     assert parse(tokens) == want
@@ -50,10 +54,11 @@ def test_parse_right_paren_detail():
     assert str(excinfo.value) == "Unexpected ')'."
 
 
-@mark.parametrize(
-    "source,want",
-    [("2", 2), ("-2", -2), ("-", Operator(symbol="-", function=operator.sub))],
-)
+@mark.parametrize("source,want", [
+    ("2", 2),
+    ("-2", -2),
+    ("-", Operator(symbol="-", function=operator.sub)),
+])
 def test_evaluate_atoms(source, want):
     expr = parse(tokenize(source))
     assert evaluate(expr) == want
@@ -66,22 +71,19 @@ def test_evaluate_unknown_operator():
     assert str(excinfo.value) == "Unknown operator: '@'."
 
 
-@mark.parametrize(
-    "source,want",
-    [
-        ("(+ 8 2)", 10),
-        ("(- 8 2)", 6),
-        ("(* 8 2)", 16),
-        ("(/ 8 2)", 4),
-        ("(/ 2 3)", 0),
-        ("(/ 20 6)", 3),
-        ("(/ -20 6)", -4),
-        ("(+ 2 (* 3 4))", 14),
-        # (100°F − 32) * 5 / 9 = 37°C
-        ("(/ (* (- 100 32) 5) 9)", 37),
-        ("(/ (* (- 0 32) 5) 9)", -18),
-    ],
-)
+@mark.parametrize("source,want", [
+    ("(+ 8 2)", 10),
+    ("(- 8 2)", 6),
+    ("(* 8 2)", 16),
+    ("(/ 8 2)", 4),
+    ("(/ 2 3)", 0),
+    ("(/ 20 6)", 3),
+    ("(/ -20 6)", -4),
+    ("(+ 2 (* 3 4))", 14),
+    # (100°F − 32) * 5 / 9 = 37°C
+    ("(/ (* (- 100 32) 5) 9)", 37),
+    ("(/ (* (- 0 32) 5) 9)", -18),
+])
 def test_evaluate_expressions(source, want):
     expr = parse(tokenize(source))
     assert evaluate(expr) == want
