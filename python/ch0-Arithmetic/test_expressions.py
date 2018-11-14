@@ -196,5 +196,5 @@ def test_repl(monkeypatch, capsys, session):
     with monkeypatch.context() as m:
         m.setitem(__builtins__, "input", ti.fake_input)
         repl()
-        captured = capsys.readouterr()
+    captured = capsys.readouterr()
     assert captured.out == str(ti)
