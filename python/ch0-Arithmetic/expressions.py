@@ -19,6 +19,7 @@ BNF of this mini-language:
 
 import collections
 import operator
+import sys
 
 QUIT_COMMAND = '.quit'
 
@@ -143,12 +144,13 @@ def evaluate(expression):
 def repl():
     prompt = '>'
     pending_lines = []
+    print(f'To exit, type: {QUIT_COMMAND}', file=sys.stderr)
     while True:
         try:
             current = input(prompt + ' ').strip()
         except EOFError:
             break
-        if QUIT_COMMAND.startswith(current.lower()):
+        if current == QUIT_COMMAND:
             break
         if current == '':
             prompt = '...'

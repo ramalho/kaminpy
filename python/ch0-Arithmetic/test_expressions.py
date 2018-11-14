@@ -143,8 +143,11 @@ class TextInteraction():
 
     def fake_input(self, prompt):
         self.prompts.add(prompt)
+        try:
+            line = next(self.input_line_gen)
+        except StopIteration:
+            raise EOFError()
         print(prompt, end='')
-        line = next(self.input_line_gen)
         print(line)
         return line
 
@@ -156,39 +159,33 @@ class TextInteraction():
     """
     > (* 111 111)
     12321
-    > .quit
     """,
     """
     > (* 111
     ... 111)
     12321
-    > .quit
     """,
     """
     > (/ 6 0)
     ! Division by zero.
     > (/ 6 3)
     2
-    > .quit
     """,
     """
     > (foo 6 0)
     ! Unknown operator: 'foo'.
     > (/ 6 3)
     2
-    > .quit
     """,
     """
     > (+ 6)
     ! Not enough arguments for operator: '+'.
     > (+ 6 3)
     9
-    > .quit
     """,
     """
     > (/ 6 5 4)
     ! Too many arguments for operator: '/'.
-    > .quit
     """,
 ])
 def test_repl(monkeypatch, capsys, session):
