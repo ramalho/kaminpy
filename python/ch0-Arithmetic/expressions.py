@@ -20,48 +20,60 @@ BNF of this mini-language:
 import collections
 import operator
 
+
 class InterpreterError(Exception):
     """generic interpreter error"""
+
     def __init__(self, value=None):
         self.value = value
 
     def __str__(self):
         msg = self.__class__.__doc__
         if self.value is not None:
-            msg = msg.rstrip('.')
-            msg += ': ' + repr(self.value) + '.'
+            msg = msg.rstrip(".")
+            msg += ": " + repr(self.value) + "."
         return msg
+
 
 class UnexpectedEndOfInput(InterpreterError):
     """Unexpected end of input."""
 
+
 class UnexpectedRightParen(InterpreterError):
     """Unexpected ')'."""
+
 
 class UnknownOperator(InterpreterError):
     """Unknown operator."""
 
+
 class EvaluationError(InterpreterError):
     """Generic evaluation error."""
+
 
 class OperatorNotCallable(EvaluationError):
     """Operator is not callable."""
 
+
 class NullExpression(EvaluationError):
     """Null expression."""
+
 
 class MissingArgument(EvaluationError):
     """Not enough arguments for operator."""
 
+
 class TooManyArguments(EvaluationError):
     """Too many arguments for operator."""
+
 
 class InvalidOperator(EvaluationError):
     """Invalid operator."""
 
+
 def tokenize(source_code):
     """Convert string into a list of tokens."""
-    return source_code.replace('(',' ( ').replace(')',' ) ').split()
+    return source_code.replace("(", " ( ").replace(")", " ) ").split()
 
 
 def parse(tokens):
@@ -70,15 +82,15 @@ def parse(tokens):
         token = tokens.pop(0)
     except IndexError:
         raise UnexpectedEndOfInput()
-    if token == '(':  # s-expression
+    if token == "(":  # s-expression
         ast = []
         if len(tokens) == 0:
             raise UnexpectedEndOfInput()
-        while tokens[0] != ')':
+        while tokens[0] != ")":
             ast.append(parse(tokens))
         tokens.pop(0)  # pop off ')'
         return ast
-    elif token == ')':
+    elif token == ")":
         raise UnexpectedRightParen()
     else:  # single atom
         try:
@@ -86,16 +98,18 @@ def parse(tokens):
         except ValueError:
             return token
 
-Operator = collections.namedtuple('Operator', 'symbol function')
+
+Operator = collections.namedtuple("Operator", "symbol function")
 
 operators = [
-    Operator('+', operator.add),
-    Operator('-', operator.sub),
-    Operator('*', operator.mul),
-    Operator('/', operator.floordiv),
+    Operator("+", operator.add),
+    Operator("-", operator.sub),
+    Operator("*", operator.mul),
+    Operator("/", operator.floordiv),
 ]
 
-operator_map = {op.symbol:op for op in operators}
+operator_map = {op.symbol: op for op in operators}
+
 
 def evaluate(expression):
     """Calculate the value of an expression"""
