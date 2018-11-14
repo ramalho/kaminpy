@@ -1,5 +1,5 @@
 *.pyc
 .DS_Store
-.venv34/
+.venv*/
 .pytest_cache/
-
+.idea/

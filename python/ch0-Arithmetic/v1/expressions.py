@@ -23,6 +23,7 @@ import sys
 
 QUIT_COMMAND = '.quit'
 
+
 class InterpreterError(Exception):
     """generic interpreter error"""
 
@@ -41,7 +42,7 @@ class UnexpectedEndOfInput(InterpreterError):
     """Unexpected end of input."""
 
 
-class UnexpectedRightParen(InterpreterError):
+class UnexpectedCloseParen(InterpreterError):
     """Unexpected ')'."""
 
 
@@ -95,7 +96,7 @@ def parse(tokens):
         tokens.pop(0)  # pop off ')'
         return ast
     elif token == ")":
-        raise UnexpectedRightParen()
+        raise UnexpectedCloseParen()
     else:  # single atom
         try:
             return int(token)
@@ -147,7 +148,7 @@ def repl():
     print(f'To exit, type: {QUIT_COMMAND}', file=sys.stderr)
     while True:
         try:
-            current = input(prompt + ' ').strip()
+            current = input(prompt + ' ').strip(' ')
         except EOFError:
             break
         if current == QUIT_COMMAND:
@@ -156,22 +157,29 @@ def repl():
             prompt = '...'
             continue
         pending_lines.append(current)
-        source = ' '.join(pending_lines) 
+        source = ' '.join(pending_lines)
+        expr = None
         try:
             expr = parse(tokenize(source))
         except UnexpectedEndOfInput:
             prompt = '...'
             continue
-        try:
-            result = evaluate(expr)
-        except ZeroDivisionError:
-            print('! Division by zero.')
-        except (UnknownOperator, MissingArgument, TooManyArguments) as exc:
+        except UnexpectedCloseParen as exc:
             print(f'! {exc}')
-        else:
-            print(result)
+        if expr is not None:
+            try:
+                result = evaluate(expr)
+            except ZeroDivisionError:
+                print('! Division by zero.')
+            except (UnknownOperator, InvalidOperator,
+                    MissingArgument, TooManyArguments,
+                    ) as exc:
+                print(f'! {exc}')
+            else:
+                print(result)
         prompt = '>'
         pending_lines = []
+
 
 if __name__ == '__main__':
     repl()

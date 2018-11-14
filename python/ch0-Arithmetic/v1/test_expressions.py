@@ -3,10 +3,11 @@ import textwrap
 
 from pytest import mark, raises
 
-from expressions import tokenize, parse, evaluate, Operator, repl
-from expressions import UnexpectedEndOfInput, UnexpectedRightParen
-from expressions import UnknownOperator, InvalidOperator
-from expressions import MissingArgument, TooManyArguments
+from .expressions import tokenize, parse, evaluate, Operator, repl
+from .expressions import UnexpectedEndOfInput, UnexpectedCloseParen
+from .expressions import UnknownOperator, InvalidOperator
+from .expressions import MissingArgument, TooManyArguments
+from .expressions import NullExpression
 
 
 @mark.parametrize("source,want", [
@@ -50,7 +51,7 @@ def test_parse_no_close_paren():
 
 
 def test_parse_right_paren_detail():
-    with raises(UnexpectedRightParen) as excinfo:
+    with raises(UnexpectedCloseParen) as excinfo:
         parse([")"])
     assert str(excinfo.value) == "Unexpected ')'."
 
@@ -99,6 +100,12 @@ def test_evaluate_not_operator():
 def test_evaluate_not_operator_with_argument():
     expr = parse(tokenize("(3 4)"))
     with raises(InvalidOperator):
+        evaluate(expr)
+
+
+def test_evaluate_empty_expression():
+    expr = parse(tokenize("()"))
+    with raises(NullExpression):
         evaluate(expr)
 
 
@@ -157,6 +164,9 @@ class TextInteraction():
 
 @mark.parametrize("session", [
     """
+    > .quit
+    """,
+    """
     > (* 111 111)
     12321
     """,
@@ -174,8 +184,10 @@ class TextInteraction():
     """
     > (foo 6 0)
     ! Unknown operator: 'foo'.
-    > (/ 6 3)
-    2
+    """,
+    """
+    > (9 8 7)
+    ! Invalid operator: 9.
     """,
     """
     > (+ 6)
@@ -187,6 +199,13 @@ class TextInteraction():
     > (/ 6 5 4)
     ! Too many arguments for operator: '/'.
     """,
+    """
+    > )
+    ! Unexpected ')'.
+    > (+ 2 2)
+    4
+    """,
+
 ])
 def test_repl(monkeypatch, capsys, session):
     ti = TextInteraction(session)
