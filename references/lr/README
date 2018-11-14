@@ -1,0 +1,4 @@
+This was my (@ramalho's) first try at writing interpreters for
+Kamin's languages in Python, around 2011. I chose a path using
+metaprogramming tricks, but in 2018 I want to restart by following
+Kamin's original code more closely.
