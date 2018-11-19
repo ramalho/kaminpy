@@ -1,8 +1,10 @@
 # Arithmetic expression interpreter -- v2
 
-This version only operators with different arities. For example:
+This version supports operators and functions with different arities. For example:
 
 ```
+> (/ 10 2)
+5
 > (abs -3)
 3
 > (odd 5)
