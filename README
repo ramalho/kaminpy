@@ -1,3 +1,7 @@
+*************************************************************************************
+This repo is archived. Active work continued in fork https://github.com/pliba/kaminpy
+*************************************************************************************
+
 This repository contains new implementations -- in Python -- of the 
 interpreters described in Samuel Kamin's excellent PLIBA [1] book. 
 
